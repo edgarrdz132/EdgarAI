@@ -1,191 +1,215 @@
-# ⚡ Automatización de Gestión de Incidencias TI con IA
+# 🤖 EdgarAI — Asistente de Soporte IT con Inteligencia Artificial
 
-![n8n](https://img.shields.io/badge/n8n-Workflow-FF6D5A?style=flat&logo=n8n&logoColor=white)
-![OpenAI](https://img.shields.io/badge/GPT--4.1--mini-OpenAI-10A37F?style=flat&logo=openai&logoColor=white)
-![Gmail](https://img.shields.io/badge/Gmail-Notificaciones-EA4335?style=flat&logo=gmail&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat&logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-3.0-00BCD4?style=flat&logo=flask&logoColor=white)
+![OpenAI](https://img.shields.io/badge/GPT--4o-OpenAI-10A37F?style=flat&logo=openai&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=flat&logo=postgresql&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-Vanilla-F7DF1E?style=flat&logo=javascript&logoColor=black)
 ![Status](https://img.shields.io/badge/Status-En%20producción-00d68f?style=flat)
 
-> Sistema de automatización no-code/low-code que clasifica y prioriza incidentes de soporte IT de forma automática usando Inteligencia Artificial — sin intervención humana en el proceso de triaje.
+> Sistema completo de soporte técnico corporativo donde los usuarios resuelven problemas técnicos en tiempo real con ayuda de IA, levantan tickets y dan seguimiento desde cualquier dispositivo.
 
 ---
 
-## 🧠 ¿Qué problema resuelve?
+## ✨ ¿Qué hace EdgarAI?
 
-En entornos de soporte IT sin plataforma ITSM corporativa, los tickets llegan sin clasificar, sin prioridad y sin nivel de escalamiento definido. Esto genera demoras, asignaciones incorrectas y pérdida de trazabilidad.
-
-Este sistema automatiza el proceso completo de **recepción → clasificación → notificación** usando GPT-4.1-mini como motor de inteligencia.
-
----
-
-## ✨ ¿Cómo funciona?
-
-```
-Usuario reporta incidente
-        ↓
-Webhook recibe los datos (nombre, departamento, descripción)
-        ↓
-Agente IA (GPT-4.1-mini) clasifica el incidente
-        ↓
-Structured Output Parser valida el JSON de salida
-        ↓
-Se genera folio automático (INC + fecha)
-        ↓
-Notificación por correo al equipo de soporte
-```
-
----
-
-## 🔍 Clasificación automática
-
-El agente de IA clasifica cada incidente en:
-
-| Campo | Opciones |
+| Funcionalidad | Descripción |
 |---|---|
-| **Categoría** | Software · Hardware · Administración · Redes · Otros |
-| **Subcategoría** | 40+ subcategorías según la categoría |
-| **Prioridad** | Urgente · Alta · Media · Baja |
-| **Nivel** | Nivel 1 · Nivel 2 |
-| **Folio** | INC + fecha automática (ej. INC20260305) |
+| 💬 **Chat con IA** | Conversación en tiempo real con GPT-4o para diagnóstico técnico |
+| 📸 **Análisis de imágenes** | El usuario sube una captura y la IA identifica el error automáticamente |
+| 🎫 **Gestión de tickets** | Crear, seguir y actualizar tickets con categoría, prioridad e historial |
+| 👥 **Sistema de roles** | Administrador y Operador con permisos y vistas diferenciadas |
+| 📊 **Panel Admin** | Dashboard estilo ServiceNow con filtros, buscador y timeline por ticket |
+| 📱 **Multi-dispositivo** | Compatible con Desktop, iPhone y Android |
 
 ---
 
 ## 🛠️ Stack Tecnológico
 
 ```
-Automatización  →  n8n (workflow no-code/low-code)
-IA              →  OpenAI GPT-4.1-mini (clasificación y análisis)
-Parser          →  Structured Output Parser (JSON validado)
-Notificaciones  →  Gmail API (correo automático al equipo)
-Trigger         →  Webhook HTTP (recepción de incidentes)
+Backend        →  Python 3.11 + Flask + Flask-CORS + Flask-Session
+IA             →  OpenAI GPT-4o (chat + vision)
+Base de datos  →  PostgreSQL 16 + psycopg2
+Frontend       →  HTML5 + CSS3 + JavaScript Vanilla
+Auth           →  Flask Sessions + SHA-256 password hashing
+Admin DB       →  pgAdmin
+Tunnel         →  ngrok (exposición local a internet)
+Config         →  python-dotenv
 ```
 
 ---
 
-## 🏗️ Arquitectura del Workflow
+## 🏗️ Arquitectura del Sistema
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                    ENTRADA                          │
-│         Webhook HTTP — recibe el incidente          │
-│   { nombre, departamento, descripcion, categoria }  │
+│                     FRONTEND                        │
+│         HTML5 / CSS3 / JavaScript Vanilla           │
+│     (Responsive — Desktop, iPhone, Android)         │
 └──────────────────────┬──────────────────────────────┘
-                       │
+                       │  HTTP / REST API
 ┌──────────────────────▼──────────────────────────────┐
-│              PROCESAMIENTO — n8n                    │
+│                  BACKEND — Flask                    │
 │                                                     │
-│  Edit Fields     →  Mapear campos del webhook       │
-│  AI Agent        →  GPT-4.1-mini clasifica          │
-│  Output Parser   →  Valida JSON estructurado        │
-│  Edit Fields 2   →  Genera folio INC + fecha        │
-└───────────┬─────────────────────────────────────────┘
-            │
-┌───────────▼──────────────────────────────────────┐
-│              SALIDA — Gmail                      │
-│  Correo automático con:                          │
-│  - Folio del ticket                              │
-│  - Datos del usuario                             │
-│  - Clasificación de la IA                        │
-│  - Prioridad y nivel de escalamiento             │
-└──────────────────────────────────────────────────┘
+│  /auth/*     →  Login, Register, Reset Password     │
+│  /ask        →  Chat con GPT-4o (texto + imagen)    │
+│  /tickets/*  →  CRUD tickets + historial estados    │
+│  /admin/*    →  Panel admin (solo rol admin)        │
+│                                                     │
+│  Flask-Session  →  Autenticación y manejo sesiones  │
+│  Roles          →  admin | operador                 │
+└───────────┬─────────────────────┬───────────────────┘
+            │                     │
+┌───────────▼──────┐   ┌──────────▼────────────────┐
+│   PostgreSQL     │   │       OpenAI API           │
+│                  │   │                            │
+│  usuarios        │   │  GPT-4o (texto)            │
+│  tickets         │   │  GPT-4o Vision (imágenes)  │
+│  conversaciones  │   │                            │
+└──────────────────┘   └────────────────────────────┘
 ```
 
 ---
 
-## 📋 Datos de entrada (Webhook)
+## 🔐 Sistema de Roles y Seguridad
 
-```json
-{
-  "nombre y apellido": "Juan Pérez",
-  "departamento": "Contabilidad",
-  "categoria": "Hardware",
-  "subcategoria": "Equipo no enciende",
-  "prioridad": "Alta",
-  "nivel": "Nivel 2",
-  "resumen": "Equipo no enciende",
-  "descripcion": "El equipo de cómputo no enciende desde esta mañana.",
-  "accion": "Verificar alimentación, cable de poder y encendido"
-}
+EdgarAI implementa control de acceso basado en roles (**RBAC**):
+
+### Administrador
+- Ve **todos** los tickets del sistema con filtros y buscador
+- Accede al historial completo de estados de cada ticket
+- Gestiona usuarios y puede cambiar estados
+- Ve todas las conversaciones del sistema
+
+### Operador
+- Ve **únicamente sus propios** tickets y conversaciones
+- Puede crear tickets y chatear con la IA
+- No tiene acceso al panel de administración ni a datos de otros usuarios
+
+### Seguridad implementada
+- Contraseñas hasheadas con **SHA-256**
+- Sesiones protegidas con **secret key** configurable
+- Decorador `@login_required` en todas las rutas protegidas
+- Endpoint de **reset de contraseña** con validación
+- Fallback a memoria si PostgreSQL no está disponible
+
+---
+
+## 🚀 Instalación y uso
+
+### 1. Clonar el repositorio
+```bash
+git clone https://github.com/tu-usuario/edgarai.git
+cd edgarai
+```
+
+### 2. Instalar dependencias
+```bash
+pip install flask flask-cors openai pillow python-dotenv psycopg2-binary
+```
+
+### 3. Configurar variables de entorno
+Crea un archivo `.env` en la raíz del proyecto:
+```env
+OPENAI_API_KEY=sk-...
+DATABASE_URL=postgresql://usuario:password@localhost:5432/edgarai
+SECRET_KEY=tu_clave_secreta_aqui
+OPENAI_MODEL=gpt-4o
+PORT=5000
+DEBUG=true
+```
+
+### 4. Inicializar la base de datos
+El sistema crea las tablas automáticamente al arrancar.
+```bash
+python app.py
+```
+
+### 5. Acceder al sistema
+```
+http://localhost:5000
+
+Usuario por defecto:
+  user: admin
+  pass: admin123
 ```
 
 ---
 
-## 📤 Notificación generada
+## 📁 Estructura del Proyecto
 
 ```
-Nuevo Ticket de Soporte TI
-
-Folio del Ticket: INC20260305
-
-DATOS DEL USUARIO:
-Reportado por: Juan Pérez
-Departamento: Contabilidad
-Descripción original: El equipo de cómputo no enciende desde esta mañana.
-
-ANÁLISIS DE LA IA:
-Categoría: Hardware
-Prioridad: Alta
-Nivel de Soporte: Nivel 2
+edgarai/
+│
+├── app.py                  # Backend principal — rutas y lógica
+├── .env                    # Variables de entorno (no incluido en repo)
+├── requirements.txt        # Dependencias del proyecto
+│
+├── templates/
+│   ├── login.html          # Página de autenticación
+│   ├── index.html          # Chat principal con EdgarAI
+│   └── admin.html          # Panel de administración
+│
+└── static/
+    ├── edgarai_avatar.jpg  # Avatar del asistente
+    └── iaconbarba.png      # Logo del sistema
 ```
 
 ---
 
-## 🚀 Cómo usar este workflow
+## 📡 Endpoints principales
 
-### 1. Requisitos
-- n8n instalado (local o en la nube)
-- Cuenta de OpenAI con API Key
-- Cuenta de Gmail con OAuth2 configurado
-
-### 2. Importar el workflow
-```
-1. Abrir n8n
-2. Ir a Workflows → Import
-3. Seleccionar el archivo My_workflow_9.json
-4. Configurar las credenciales de OpenAI y Gmail
-```
-
-### 3. Configurar credenciales
-```
-OpenAI:  Configuración → Credenciales → OpenAI API → ingresar API Key
-Gmail:   Configuración → Credenciales → Gmail OAuth2 → autorizar cuenta
-```
-
-### 4. Activar el workflow
-```
-Activar el toggle en la esquina superior derecha
-Copiar la URL del webhook generada
-Usar esa URL como endpoint para recibir tickets
-```
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| POST | `/auth/login` | Iniciar sesión | ❌ |
+| POST | `/auth/register` | Crear cuenta | ❌ |
+| POST | `/auth/logout` | Cerrar sesión | ✅ |
+| POST | `/auth/reset-password` | Restablecer contraseña | ❌ |
+| POST | `/ask` | Chat con GPT-4o | ✅ |
+| GET | `/tickets` | Listar tickets | ✅ |
+| POST | `/tickets` | Crear ticket | ✅ |
+| PATCH | `/tickets/<id>/estado` | Actualizar estado | ✅ |
+| GET | `/admin/usuarios` | Listar usuarios | 🔒 Admin |
+| GET | `/status` | Estado del sistema | ❌ |
 
 ---
 
 ## 💡 Decisiones técnicas destacadas
 
-### Agente IA con instrucciones estrictas
-El system prompt del agente fue diseñado para que la IA **no haga preguntas, no explique decisiones y no invente información** — solo clasifica. Esto garantiza respuestas consistentes y procesables automáticamente.
+### Compatibilidad iOS / WebKit
+El mayor reto fue hacer que la interfaz funcionara correctamente en Safari/iOS. WebKit maneja los eventos táctiles y el `overflow` de forma diferente a Chrome. La solución fue migrar de un sidebar tradicional a una **Bottom Navigation Bar**, lo que mejoró la UX en todos los dispositivos Apple sin sacrificar el diseño en desktop.
 
-### Structured Output Parser
-Usar el parser estructurado de n8n garantiza que la respuesta de GPT-4.1-mini siempre llegue en JSON válido, evitando errores en los nodos siguientes.
+### Fallback a memoria
+Si PostgreSQL no está configurado, el sistema corre en modo memoria. Esto permite desarrollo y demos sin depender de una base de datos activa.
 
-### Folio automático
-El folio se genera con la fórmula `INC + fecha actual` — sin base de datos, sin dependencias externas. Simple y funcional.
-
-### Retry automático
-El agente tiene configurado `maxTries: 4` — si la IA falla en una clasificación, reintenta automáticamente hasta 4 veces antes de marcar error.
+### GPT-4o Vision
+Además del chat de texto, el sistema acepta imágenes. El usuario puede adjuntar una captura de pantalla y GPT-4o analiza visualmente el error, devolviendo un diagnóstico detallado.
 
 ---
 
-## 🔄 Contexto de implementación
+## 🔄 Historial de versiones
 
-Este workflow fue implementado en **Eventos Pabellón M.** como solución ante la ausencia de una plataforma ITSM corporativa. Reemplazó el proceso manual de recepción y clasificación de tickets, mejorando la trazabilidad y reduciendo los tiempos de asignación al equipo de soporte.
+### v2.0 — Marzo 2026
+- Mayor rendimiento y estabilidad general
+- UX iOS completamente rediseñada (Bottom Nav Bar)
+- Corrección de bugs detectados en producción
+- Feedback de usuarios internos incorporado
+- Panel admin con filtros y buscador mejorado
+- Reset de contraseña desde el login
+
+### v1.0 — Enero 2026
+- Lanzamiento inicial
+- Chat con GPT-4o + análisis de imágenes
+- Sistema de tickets con PostgreSQL
+- Autenticación con roles Admin / Operador
 
 ---
 
 ## 👨‍💻 Autor
 
-**Edgar Misael Guevara Rodriguez** — IT Engineer & AI Developer
-🔗 [LinkedIn](https://linkedin.com/in/ing-edgar-rodriguez-743484206/) · 📧 edgar.guevara.ingindustrial@gmail.com · 🤖 [EdgarAI](https://github.com/edgarrdz132/edgarai)
+**Edgar** — Desarrollador Full Stack  
+🔗 [LinkedIn](https://linkedin.com/in/ing-edgar-rodriguez-743484206/) · 📧 edgar.guevara.ingindustrial@gmail.com · 🐙 [GitHub](https://github.com/edgarrdz132)
 
 ---
 
-> *"Cuando no tienes las herramientas, las construyes."*
+> *"Integrar IA en procesos internos no reemplaza al equipo de IT — lo potencia."*
