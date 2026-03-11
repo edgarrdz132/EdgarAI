@@ -1,0 +1,1979 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>EdgarAI — Soporte IT</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   TOKENS
+========================================================= */
+:root {
+  --bg:          #080b10;
+  --surface:     #0f1218;
+  --surface2:    #161b24;
+  --surface3:    #1c2230;
+  --border:      rgba(255,255,255,0.07);
+  --border2:     rgba(255,255,255,0.12);
+  --accent:      #00e5ff;
+  --accent2:     #7c6ff7;
+  --danger:      #ff4d6a;
+  --warning:     #ffb800;
+  --success:     #22c55e;
+  --text:        #e2e8f0;
+  --muted:       #64748b;
+  --muted2:      #94a3b8;
+  --radius:      14px;
+  --fh:          'Syne', sans-serif;
+  --fb:          'DM Sans', sans-serif;
+  --glow:        0 0 40px rgba(0,229,255,0.1);
+  --sidebar-w:   270px;
+}
+
+/* =========================================================
+   RESET
+========================================================= */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; }
+body {
+  font-family: var(--fb);
+  background: var(--bg);
+  color: var(--text);
+  height: 100%;
+  /* NO overflow:hidden en body — bloquea eventos táctiles en iOS */
+  overflow-x: hidden;
+}
+button { cursor: pointer; font-family: var(--fb); }
+input, select, textarea { font-family: var(--fb); }
+
+/* =========================================================
+   NOISE OVERLAY
+========================================================= */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.3;
+}
+
+/* =========================================================
+   LAYOUT
+========================================================= */
+#app {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  height: 100vh;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+#app.sidebar-open {
+  overflow: visible;
+}
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+#sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: transform 0.3s ease;
+}
+
+.sidebar-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sidebar-scroll::-webkit-scrollbar { width: 3px; }
+.sidebar-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* logo */
+.logo-wrap {
+  display: flex; align-items: center; gap: 10px;
+  padding: 20px 16px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.logo-avatar {
+  width: 44px; height: 44px; border-radius: 12px; overflow: hidden;
+  border: 2px solid rgba(0,229,255,0.3);
+  box-shadow: 0 0 20px rgba(0,229,255,0.15);
+  flex-shrink: 0;
+}
+.logo-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.logo-text h1 { font-family: var(--fh); font-size: 14px; font-weight: 600; color: #fff; letter-spacing: 0.01em; }
+.logo-text span { font-size: 9.5px; color: var(--muted2); text-transform: uppercase; letter-spacing: 0.12em; font-family: var(--fb); }
+
+/* nav buttons */
+.nav-btn {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%;
+  background: linear-gradient(135deg, rgba(0,229,255,0.1), rgba(124,111,247,0.1));
+  border: 1px solid rgba(0,229,255,0.18);
+  border-radius: 11px;
+  padding: 11px 14px;
+  color: var(--accent);
+  font-family: var(--fh);
+  font-size: 13px; font-weight: 600;
+  transition: all 0.2s;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+  margin-top: 4px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: rgba(0,229,255,0.1);
+  /* Asegurar que recibe toques en iOS */
+  touch-action: manipulation;
+}
+.nav-btn:hover {
+  background: linear-gradient(135deg, rgba(0,229,255,0.18), rgba(124,111,247,0.18));
+  border-color: rgba(0,229,255,0.35);
+  box-shadow: var(--glow);
+}
+.nav-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; flex-shrink: 0; stroke-width: 2; }
+
+.nav-btn.ticket-btn {
+  background: linear-gradient(135deg, rgba(255,77,106,0.1), rgba(255,184,0,0.08));
+  border-color: rgba(255,77,106,0.2);
+  color: #ff7a90;
+  margin-top: 8px;
+}
+.nav-btn.ticket-btn:hover {
+  background: linear-gradient(135deg, rgba(255,77,106,0.18), rgba(255,184,0,0.14));
+  border-color: rgba(255,77,106,0.35);
+  box-shadow: 0 0 30px rgba(255,77,106,0.1);
+}
+
+/* section title */
+.section-label {
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--muted);
+  padding: 6px 4px 2px;
+  margin-top: 8px;
+}
+
+/* history items */
+.history-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--muted2);
+  transition: all 0.15s;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(255,255,255,0.05);
+}
+.history-item:hover { background: var(--surface2); color: var(--text); }
+.history-item.active { background: var(--surface2); color: var(--accent); }
+.history-item svg { width: 13px; height: 13px; stroke: currentColor; fill: none; flex-shrink: 0; }
+
+/* sidebar footer */
+.sidebar-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.user-card {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.user-card:hover { background: var(--surface2); }
+.avatar-sm {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent2), #4f46e5);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--fh); font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.user-info { flex: 1; min-width: 0; }
+.user-info strong { display: block; font-size: 12.5px; font-weight: 500; color: var(--text); }
+.user-info small { font-size: 10.5px; color: var(--muted); }
+.online-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); box-shadow: 0 0 6px var(--success); }
+
+/* =========================================================
+   MAIN
+========================================================= */
+#main {
+  display: flex; flex-direction: column;
+  height: 100vh;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+/* topbar */
+#topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px;
+  height: 60px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(8,11,16,0.85);
+  backdrop-filter: blur(16px);
+  flex-shrink: 0;
+  gap: 12px;
+}
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+.topbar-left h2 { font-family: var(--fb); font-size: 14px; font-weight: 500; color: #fff; letter-spacing: 0.01em; }
+.badge {
+  padding: 2px 7px; border-radius: 20px;
+  font-size: 9px; font-weight: 600;
+  background: rgba(0,229,255,0.08); color: var(--accent);
+  border: 1px solid rgba(0,229,255,0.18);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  font-family: var(--fb);
+}
+.topbar-right { display: flex; gap: 6px; align-items: center; }
+.icon-btn {
+  width: 34px; height: 34px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.2s; color: var(--muted);
+}
+.icon-btn:hover { background: var(--surface3); color: var(--text); border-color: var(--border2); }
+.icon-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; }
+
+/* hamburger (mobile) */
+#menuBtn {
+  display: none;
+  width: 34px; height: 34px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 9px;
+  align-items: center; justify-content: center;
+  cursor: pointer;
+}
+#menuBtn svg { width: 17px; height: 17px; stroke: var(--text); fill: none; }
+
+/* =========================================================
+   CHAT MESSAGES
+========================================================= */
+#chat-messages {
+  flex: 1; overflow-y: auto;
+  padding: 28px 24px;
+  display: flex; flex-direction: column; gap: 18px;
+  scroll-behavior: smooth;
+}
+#chat-messages::-webkit-scrollbar { width: 4px; }
+#chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* welcome */
+#welcome {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center; gap: 14px;
+  flex: 1; padding: 32px 20px;
+  animation: fadeUp 0.5s ease;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.welcome-avatar {
+  width: 90px; height: 90px; border-radius: 26px; overflow: hidden;
+  border: 2px solid rgba(0,229,255,0.35);
+  box-shadow: 0 0 50px rgba(0,229,255,0.2), 0 0 100px rgba(124,111,247,0.1);
+  animation: pulseAvatar 3s ease-in-out infinite;
+}
+@keyframes pulseAvatar {
+  0%,100% { box-shadow: 0 0 40px rgba(0,229,255,0.15), 0 0 80px rgba(124,111,247,0.08); }
+  50%      { box-shadow: 0 0 70px rgba(0,229,255,0.3), 0 0 140px rgba(124,111,247,0.18); }
+}
+.welcome-avatar img { width: 100%; height: 100%; object-fit: cover; }
+#welcome h2 { font-family: var(--fh); font-size: 20px; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
+#welcome p { color: var(--muted2); max-width: 360px; font-size: 14px; }
+
+.quick-actions {
+  display: grid; grid-template-columns: repeat(2,1fr);
+  gap: 9px; width: 100%; max-width: 480px; margin-top: 6px;
+}
+.quick-btn {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 13px 14px;
+  text-align: left; cursor: pointer;
+  transition: all 0.2s; color: var(--text);
+}
+.quick-btn:hover {
+  background: var(--surface3); border-color: rgba(0,229,255,0.22);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+}
+.quick-btn .qi { font-size: 17px; margin-bottom: 5px; display: block; }
+.quick-btn strong { display: block; font-size: 12.5px; font-weight: 600; }
+.quick-btn small { font-size: 11px; color: var(--muted2); }
+
+/* message rows */
+.msg-row {
+  display: flex; gap: 10px; align-items: flex-start;
+  animation: msgIn 0.28s ease;
+}
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.msg-row.user { flex-direction: row-reverse; }
+
+.msg-av {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; overflow: hidden;
+}
+.msg-row.user .msg-av {
+  background: linear-gradient(135deg, var(--accent2), #4f46e5);
+  font-family: var(--fh); font-size: 12px; font-weight: 700; color: #fff;
+}
+.msg-row.ai .msg-av { border: 1.5px solid rgba(0,229,255,0.3); }
+.msg-row.ai .msg-av img { width: 100%; height: 100%; object-fit: cover; }
+
+.msg-bubble {
+  max-width: 70%; padding: 12px 16px;
+  border-radius: 14px; font-size: 13.5px; line-height: 1.7;
+  word-break: break-word;
+}
+.msg-row.user .msg-bubble {
+  background: linear-gradient(135deg, #172845, #1d3460);
+  border: 1px solid rgba(0,229,255,0.13);
+  border-bottom-right-radius: 3px;
+}
+.msg-row.ai .msg-bubble {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-bottom-left-radius: 3px;
+}
+
+/* typing */
+.typing-dots {
+  display: flex; gap: 4px; align-items: center; padding: 3px 0;
+}
+.typing-dots span {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--muted);
+  animation: td 1.2s infinite;
+}
+.typing-dots span:nth-child(2) { animation-delay: 0.18s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.36s; }
+@keyframes td {
+  0%,60%,100% { transform: translateY(0); opacity: 0.35; }
+  30%          { transform: translateY(-5px); opacity: 1; }
+}
+
+/* =========================================================
+   INPUT BAR
+========================================================= */
+#input-area {
+  padding: 14px 24px 18px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  background: rgba(8,11,16,0.9);
+  backdrop-filter: blur(12px);
+}
+#imagePreviewContainer {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;
+}
+.img-preview-thumb {
+  position: relative; width: 56px; height: 56px;
+  border-radius: 8px; overflow: hidden; border: 1px solid var(--border);
+}
+.img-preview-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.img-remove {
+  position: absolute; top: 2px; right: 2px;
+  width: 15px; height: 15px; border-radius: 50%;
+  background: rgba(0,0,0,0.7);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 9px; color: #fff; border: none;
+}
+
+.input-box {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 14px;
+  display: flex; align-items: flex-end; gap: 7px;
+  padding: 10px 12px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input-box:focus-within {
+  border-color: rgba(0,229,255,0.28);
+  box-shadow: 0 0 0 3px rgba(0,229,255,0.06), var(--glow);
+}
+.input-box textarea {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: var(--text); font-size: 13.5px; line-height: 1.6;
+  resize: none; max-height: 110px; min-height: 22px; overflow-y: auto;
+}
+.input-box textarea::placeholder { color: var(--muted); }
+.input-actions { display: flex; gap: 5px; align-items: center; }
+
+.attach-btn {
+  width: 32px; height: 32px; background: transparent;
+  border: 1px solid var(--border); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted); transition: all 0.2s;
+}
+.attach-btn:hover { background: var(--surface3); color: var(--text); }
+.attach-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
+
+.send-btn {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+  box-shadow: 0 0 14px rgba(0,229,255,0.18);
+}
+.send-btn:hover { transform: scale(1.06); box-shadow: 0 0 22px rgba(0,229,255,0.32); }
+.send-btn:active { transform: scale(0.94); }
+.send-btn svg { width: 14px; height: 14px; stroke: #080b10; fill: none; stroke-width: 2.5; }
+
+.input-hint {
+  display: flex; justify-content: space-between;
+  margin-top: 7px; font-size: 10.5px; color: var(--muted);
+}
+
+/* =========================================================
+   TICKET MODAL
+========================================================= */
+#ticketOverlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(6px);
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+#ticketOverlay.open { display: flex; }
+
+#ticketModal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  width: 100%; max-width: 540px;
+  /* Sin max-height para que el scroll sea del overlay, no del modal */
+  margin: auto;
+  overflow-y: visible;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+  animation: modalIn 0.28s ease;
+  /* iOS fix */
+  -webkit-transform: translateZ(0);
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95) translateY(16px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+#ticketModal::-webkit-scrollbar { width: 4px; }
+#ticketModal::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: var(--surface); z-index: 1;
+}
+.modal-header-left { display: flex; align-items: center; gap: 12px; }
+.modal-icon {
+  width: 40px; height: 40px; border-radius: 11px;
+  background: linear-gradient(135deg, rgba(255,77,106,0.15), rgba(255,184,0,0.1));
+  border: 1px solid rgba(255,77,106,0.2);
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-icon svg { width: 18px; height: 18px; stroke: #ff7a90; fill: none; }
+.modal-header h3 { font-family: var(--fh); font-size: 16px; font-weight: 700; color: #fff; }
+.modal-header p { font-size: 11.5px; color: var(--muted2); margin-top: 1px; }
+.close-btn {
+  width: 32px; height: 32px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--muted); transition: all 0.2s;
+}
+.close-btn:hover { background: var(--surface3); color: var(--text); }
+.close-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
+
+.modal-body { padding: 20px 24px 24px; display: flex; flex-direction: column; gap: 16px; }
+
+/* form fields */
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label {
+  font-size: 11.5px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--muted2);
+}
+.field label span { color: var(--danger); margin-left: 2px; }
+
+.field textarea, .field input[type="text"], .field select {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 11px 14px;
+  color: var(--text);
+  font-size: 13.5px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none; width: 100%;
+  appearance: none; -webkit-appearance: none;
+}
+.field textarea:focus, .field input[type="text"]:focus, .field select:focus {
+  border-color: rgba(0,229,255,0.3);
+  box-shadow: 0 0 0 3px rgba(0,229,255,0.07);
+}
+.field textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+.field textarea::placeholder, .field input::placeholder { color: var(--muted); }
+.select-wrap { position: relative; }
+.select-wrap::after {
+  content: '';
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  width: 0; height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid var(--muted);
+  pointer-events: none;
+}
+.field select option { background: #1c2230; color: var(--text); }
+
+/* priority picker */
+.priority-grid {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 7px;
+}
+.prio-card {
+  border-radius: 10px; padding: 10px 8px;
+  border: 1px solid var(--border2);
+  cursor: pointer; transition: all 0.18s;
+  text-align: center;
+  background: var(--surface2);
+}
+.prio-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+.prio-card.selected { border-width: 1.5px; }
+.prio-card .prio-num {
+  font-family: var(--fh); font-size: 20px; font-weight: 800; line-height: 1; margin-bottom: 4px;
+}
+.prio-card .prio-label { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+.prio-card .prio-desc { font-size: 9.5px; color: var(--muted); margin-top: 2px; }
+
+.prio-card[data-p="1"] .prio-num { color: #22c55e; }
+.prio-card[data-p="1"].selected { border-color: #22c55e; background: rgba(34,197,94,0.08); box-shadow: 0 0 16px rgba(34,197,94,0.1); }
+.prio-card[data-p="2"] .prio-num { color: #60a5fa; }
+.prio-card[data-p="2"].selected { border-color: #60a5fa; background: rgba(96,165,250,0.08); box-shadow: 0 0 16px rgba(96,165,250,0.1); }
+.prio-card[data-p="3"] .prio-num { color: var(--warning); }
+.prio-card[data-p="3"].selected { border-color: var(--warning); background: rgba(255,184,0,0.08); box-shadow: 0 0 16px rgba(255,184,0,0.1); }
+.prio-card[data-p="4"] .prio-num { color: var(--danger); }
+.prio-card[data-p="4"].selected { border-color: var(--danger); background: rgba(255,77,106,0.08); box-shadow: 0 0 16px rgba(255,77,106,0.1); }
+
+/* two columns */
+.fields-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* submit */
+.modal-footer {
+  padding: 0 24px 24px;
+  display: flex; gap: 10px;
+}
+.btn-cancel {
+  flex: 1; padding: 12px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 11px; color: var(--muted2);
+  font-size: 13px; font-weight: 600;
+  transition: all 0.2s;
+}
+.btn-cancel:hover { background: var(--surface3); color: var(--text); }
+.btn-submit {
+  flex: 2; padding: 12px;
+  background: linear-gradient(135deg, #ff4d6a, #ff8c42);
+  border: none; border-radius: 11px; color: #fff;
+  font-family: var(--fh); font-size: 13px; font-weight: 700;
+  letter-spacing: 0.03em;
+  transition: all 0.2s;
+  box-shadow: 0 0 20px rgba(255,77,106,0.2);
+}
+.btn-submit:hover { transform: translateY(-1px); box-shadow: 0 4px 24px rgba(255,77,106,0.35); }
+.btn-submit:active { transform: translateY(0); }
+
+/* ticket success toast */
+#ticketToast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 99999;
+  background: var(--surface);
+  border: 1px solid rgba(34,197,94,0.35);
+  border-radius: 14px;
+  padding: 14px 18px;
+  display: flex; align-items: center; gap: 12px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.4), 0 0 20px rgba(34,197,94,0.1);
+  transform: translateY(100px); opacity: 0;
+  transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  max-width: 320px;
+}
+#ticketToast.show { transform: translateY(0); opacity: 1; }
+.toast-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: rgba(34,197,94,0.12);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.toast-icon svg { width: 16px; height: 16px; stroke: var(--success); fill: none; }
+.toast-text strong { display: block; font-size: 13px; font-weight: 600; color: #fff; }
+.toast-text small { font-size: 11.5px; color: var(--muted2); }
+
+/* =========================================================
+   TICKET TRACKING PANEL
+========================================================= */
+#trackingOverlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(6px);
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+#trackingOverlay.open { display: flex; }
+
+#trackingModal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  width: 100%; max-width: 560px;
+  margin: auto;
+  overflow-y: visible;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+  animation: modalIn 0.28s ease;
+  -webkit-transform: translateZ(0);
+}
+#trackingModal::-webkit-scrollbar { width: 4px; }
+#trackingModal::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.tracking-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: var(--surface); z-index: 1;
+}
+.tracking-header h3 { font-family: var(--fh); font-size: 15px; font-weight: 700; color: #fff; }
+.tracking-header p  { font-size: 11.5px; color: var(--muted2); margin-top: 1px; }
+
+/* filter tabs */
+.estado-tabs {
+  display: flex; gap: 6px;
+  padding: 14px 24px 0;
+  overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+  .tab-btn[data-filter="all"] {
+    display: none;
+  }
+  .estado-tabs {
+    justify-content: center;
+    padding: 14px 12px 0;
+  }
+}
+.tab-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 11.5px; font-weight: 600;
+  border: 1px solid var(--border2);
+  background: transparent; color: var(--muted2);
+  cursor: pointer; transition: all 0.18s;
+}
+.tab-btn:hover { background: var(--surface2); color: var(--text); }
+.tab-btn.active { background: rgba(0,229,255,0.1); color: var(--accent); border-color: rgba(0,229,255,0.3); }
+.tab-btn.t-abierto.active   { background: rgba(34,197,94,0.1);  color: #22c55e; border-color: rgba(34,197,94,0.3); }
+.tab-btn.t-progreso.active  { background: rgba(255,184,0,0.1);  color: #ffb800; border-color: rgba(255,184,0,0.3); }
+.tab-btn.t-cerrado.active   { background: rgba(100,116,139,0.15); color: var(--muted2); border-color: rgba(100,116,139,0.3); }
+
+/* ticket list */
+#trackingList {
+  padding: 14px 24px 20px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+.ticket-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.ticket-card:hover {
+  border-color: rgba(0,229,255,0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+.ticket-card-top {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.ticket-id { font-family: var(--fh); font-size: 12px; font-weight: 700; color: var(--accent); }
+.estado-badge {
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 10.5px; font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.estado-Abierto     { background: rgba(34,197,94,0.12);  color: #22c55e; border: 1px solid rgba(34,197,94,0.25); }
+.estado-En\ progreso { background: rgba(255,184,0,0.12);  color: #ffb800; border: 1px solid rgba(255,184,0,0.25); }
+.estado-Cerrado     { background: rgba(100,116,139,0.15); color: var(--muted2); border: 1px solid rgba(100,116,139,0.25); }
+
+.ticket-resumen { font-size: 13px; color: var(--text); margin-bottom: 6px; font-weight: 500; }
+.ticket-meta {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  font-size: 11.5px; color: var(--muted2);
+}
+.ticket-meta span { display: flex; align-items: center; gap: 4px; }
+
+/* priority dots */
+.prio-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+.prio-dot-1 { background: #22c55e; box-shadow: 0 0 5px #22c55e; }
+.prio-dot-2 { background: #60a5fa; box-shadow: 0 0 5px #60a5fa; }
+.prio-dot-3 { background: #ffb800; box-shadow: 0 0 5px #ffb800; }
+.prio-dot-4 { background: #ff4d6a; box-shadow: 0 0 5px #ff4d6a; }
+
+/* ticket detail inside tracking */
+#ticketDetail { padding: 0 24px 24px; display: none; }
+#ticketDetail.open { display: block; }
+.detail-back {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12.5px; color: var(--muted2); cursor: pointer;
+  margin-bottom: 14px; transition: color 0.15s;
+  background: none; border: none;
+}
+.detail-back:hover { color: var(--accent); }
+.detail-back svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
+
+.detail-section { margin-bottom: 18px; }
+.detail-section h4 {
+  font-size: 10.5px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--muted); margin-bottom: 8px;
+}
+.detail-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+}
+.detail-item { background: var(--surface2); border-radius: 9px; padding: 10px 12px; }
+.detail-item label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 3px; }
+.detail-item span  { font-size: 13px; color: var(--text); font-weight: 500; }
+
+/* estado changer */
+.estado-changer {
+  background: var(--surface2); border-radius: 11px; padding: 14px;
+  border: 1px solid var(--border);
+}
+.estado-changer p { font-size: 12px; color: var(--muted2); margin-bottom: 10px; }
+.estado-btns { display: flex; gap: 7px; flex-wrap: wrap; }
+.estado-change-btn {
+  padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
+  border: 1px solid var(--border2); background: var(--surface3);
+  color: var(--text); cursor: pointer; transition: all 0.18s;
+}
+.estado-change-btn:hover { transform: translateY(-1px); }
+.estado-change-btn.s-abierto:hover   { background: rgba(34,197,94,0.15);  border-color: #22c55e; color: #22c55e; }
+.estado-change-btn.s-progreso:hover  { background: rgba(255,184,0,0.15);  border-color: #ffb800; color: #ffb800; }
+.estado-change-btn.s-cerrado:hover   { background: rgba(100,116,139,0.2); border-color: var(--muted); color: var(--muted2); }
+.estado-change-btn.s-active { opacity: 0.4; cursor: default; pointer-events: none; }
+
+/* timeline */
+.timeline { display: flex; flex-direction: column; gap: 0; }
+.timeline-item {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding-bottom: 14px; position: relative;
+}
+.timeline-item:not(:last-child)::before {
+  content: '';
+  position: absolute; left: 7px; top: 18px;
+  width: 2px; bottom: 0;
+  background: var(--border);
+}
+.tl-dot {
+  width: 16px; height: 16px; border-radius: 50%;
+  flex-shrink: 0; margin-top: 2px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 8px;
+}
+.tl-dot-abierto  { background: rgba(34,197,94,0.2);  border: 2px solid #22c55e; }
+.tl-dot-progreso { background: rgba(255,184,0,0.2);  border: 2px solid #ffb800; }
+.tl-dot-cerrado  { background: rgba(100,116,139,0.2); border: 2px solid var(--muted); }
+.tl-dot-resuelto { background: rgba(0,229,255,0.2); border: 2px solid #00e5ff; }
+.estado-Resuelto { background: rgba(0,229,255,0.12); color: #00e5ff; border: 1px solid rgba(0,229,255,0.25); }
+.tl-content { flex: 1; }
+.tl-content strong { font-size: 12.5px; font-weight: 600; color: var(--text); display: block; }
+.tl-content small  { font-size: 11px; color: var(--muted2); }
+.tl-content p      { font-size: 12px; color: var(--muted2); margin-top: 2px; }
+.empty-state {
+  text-align: center; padding: 32px 20px;
+  color: var(--muted); font-size: 13px;
+}
+.empty-state .es-icon { font-size: 32px; margin-bottom: 8px; }
+
+/* mobile sidebar overlay */
+/* =========================================================
+   BOTTOM NAV — solo móvil
+========================================================= */
+#bottomNav {
+  display: none;
+}
+@media (max-width: 768px) {
+  #bottomNav {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 9999;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+    justify-content: space-around;
+    align-items: center;
+  }
+  .bnav-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    flex: 1; padding: 4px 2px;
+    background: none; border: none;
+    color: var(--muted2); font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: color 0.15s;
+  }
+  .bnav-btn:active { color: var(--accent); transform: scale(0.93); }
+  .bnav-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+  .bnav-btn.ticket svg { stroke: #ff7a90; }
+  .bnav-btn.ticket { color: #ff7a90; }
+  .bnav-btn.tracking svg { stroke: #a5b4fc; }
+  .bnav-btn.tracking { color: #a5b4fc; }
+  /* Dar espacio al bottom nav */
+  #input-area { padding-bottom: max(70px, calc(60px + env(safe-area-inset-bottom))) !important; }
+  /* Ocultar hamburger en móvil ya que tenemos bottom nav */
+  #menuBtn { display: none !important; }
+}
+#mobileSidebar {
+  display: none;
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  max-width: 100vw;
+  max-height: 100vh;
+  padding: 0;
+  border: none;
+  background: transparent;
+  z-index: 9999;
+}
+#mobileSidebar[open] { display: flex; }
+#mobileSidebar::backdrop {
+  background: rgba(0,0,0,0.6);
+}
+#mobileSidebarInner {
+  width: 270px;
+  height: 100vh;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-shadow: 4px 0 30px rgba(0,0,0,0.5);
+  animation: slideIn 0.25s ease;
+}
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
+#sidebarOverlay { display: none; }
+
+/* =========================================================
+   RESPONSIVE — MOBILE
+========================================================= */
+@media (max-width: 768px) {
+  :root { --sidebar-w: 270px; }
+
+  #app { grid-template-columns: 1fr; }
+  #menuBtn { display: flex; }
+
+  /* Fix crítico iOS/Android: overflow-hidden bloquea eventos táctiles */
+  html { height: -webkit-fill-available; }
+  body { height: 100vh; height: -webkit-fill-available; overflow: hidden; }
+  #app {
+    height: 100vh; height: -webkit-fill-available;
+    overflow: visible !important;
+  }
+  #main {
+    height: 100vh;
+    height: -webkit-fill-available;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+  }
+
+  #sidebar {
+    position: fixed; top: 0; left: 0;
+    width: var(--sidebar-w); height: 100vh;
+    z-index: 9999 !important;
+    transform: translateX(-100%);
+    box-shadow: 4px 0 30px rgba(0,0,0,0.5);
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* Crear nuevo stacking context completamente independiente */
+    -webkit-transform: translateX(-100%);
+    will-change: transform;
+  }
+  #sidebar.open {
+    transform: translateX(0) !important;
+    -webkit-transform: translateX(0) !important;
+  }
+  #sidebarOverlay { z-index: 9998 !important; }
+  #sidebarOverlay.open { display: block; pointer-events: auto; }
+
+  /* Topbar fijo arriba */
+  #topbar {
+    padding: 0 14px;
+    height: 52px;
+    flex-shrink: 0;
+  }
+  .topbar-left h2 { font-size: 13px; font-weight: 500; }
+  .badge { display: none; } /* ocultar badge en móvil para dar espacio */
+
+  /* Mensajes con scroll correcto */
+  #chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 12px;
+    gap: 12px;
+    /* Espacio extra para que no quede tapado por el input */
+    padding-bottom: 8px;
+  }
+
+  /* Input SIEMPRE visible abajo */
+  #input-area {
+    padding: 10px 12px 14px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+    /* Soporte para safe-area en iPhone con notch */
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
+  }
+
+  #imagePreviewContainer { padding: 0 12px 6px; }
+
+  /* Fuentes más pequeñas en móvil */
+  .input-box textarea {
+    font-size: 16px; /* 16px evita zoom automático en iOS */
+    min-height: 22px;
+  }
+  .input-hint { font-size: 10px; }
+
+  /* Burbujas de mensaje */
+  .msg-bubble {
+    max-width: 85%;
+    font-size: 13px;
+    padding: 10px 13px;
+  }
+
+  /* Welcome screen */
+  #welcome { padding: 20px 16px; gap: 10px; }
+  #welcome h2 { font-size: 16px; }
+  #welcome p  { font-size: 12.5px; }
+  .welcome-avatar { width: 68px; height: 68px; border-radius: 18px; }
+
+  .quick-actions { grid-template-columns: repeat(2,1fr); gap: 7px; margin-top: 4px; }
+  .quick-btn { padding: 10px 11px; }
+  .quick-btn strong { font-size: 12px; }
+  .quick-btn small  { font-size: 10.5px; }
+  .quick-btn .qi    { font-size: 15px; margin-bottom: 3px; }
+
+  /* Modales */
+  .fields-row { grid-template-columns: 1fr; }
+  .priority-grid { grid-template-columns: repeat(2,1fr); }
+  #ticketToast { left: 12px; right: 12px; bottom: 12px; }
+  .modal-body { padding: 14px 16px 18px; }
+  .modal-footer { padding: 0 16px max(80px, calc(70px + env(safe-area-inset-bottom))); }
+
+  /* Iconos topbar más pequeños */
+  .icon-btn { width: 30px; height: 30px; }
+  .icon-btn svg { width: 14px; height: 14px; }
+}
+
+@media (max-width: 380px) {
+  .quick-actions { grid-template-columns: 1fr; }
+  #welcome h2 { font-size: 15px; }
+  .msg-bubble { font-size: 12.5px; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- TRACKING OVERLAY -->
+<div id="trackingOverlay" role="dialog" aria-modal="true">
+  <div id="trackingModal">
+    <div class="tracking-header">
+      <div>
+        <h3>🎫 Seguimiento de Tickets</h3>
+        <p id="trackingCount">Cargando tickets...</p>
+      </div>
+      <button class="close-btn" onclick="closeTracking()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- Lista de tickets -->
+    <div id="trackingListWrap">
+      <div class="estado-tabs">
+        <button class="tab-btn active" data-filter="all"      onclick="filterTickets('all', this)">Todos</button>
+        <button class="tab-btn t-abierto"  data-filter="Abierto"     onclick="filterTickets('Abierto', this)">🟢 Abierto</button>
+        <button class="tab-btn t-progreso" data-filter="En progreso" onclick="filterTickets('En progreso', this)">🟡 En progreso</button>
+        <button class="tab-btn t-cerrado"  data-filter="Cerrado"     onclick="filterTickets('Cerrado', this)">⚫ Cerrado</button>
+          <button class="tab-btn t-resuelto" data-filter="Resuelto" onclick="filterTickets('Resuelto', this)">🔵 Resuelto</button>
+      </div>
+      <div id="trackingList"></div>
+    </div>
+
+    <!-- Detalle de ticket seleccionado -->
+    <div id="ticketDetail">
+      <button class="detail-back" onclick="backToList()">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        Volver a la lista
+      </button>
+
+      <div class="detail-section">
+        <h4>Información del Ticket</h4>
+        <div class="detail-grid" id="detailGrid"></div>
+      </div>
+
+      <div class="detail-section">
+        <h4>Cambiar Estado</h4>
+        <div class="estado-changer">
+          <p>Estado actual: <strong id="currentEstadoLabel">—</strong></p>
+          <div class="estado-btns">
+            <button class="estado-change-btn s-abierto"  onclick="changeEstado('Abierto')">🟢 Abierto</button>
+            <button class="estado-change-btn s-progreso" onclick="changeEstado('En progreso')">🟡 En progreso</button>
+            <button class="estado-change-btn s-cerrado"  onclick="changeEstado('Cerrado')">⚫ Cerrado</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <h4>Historial de Estados</h4>
+        <div class="timeline" id="detailTimeline"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TICKET OVERLAY -->
+<div id="ticketOverlay" role="dialog" aria-modal="true">
+  <div id="ticketModal">
+    <div class="modal-header">
+      <div class="modal-header-left">
+        <div class="modal-icon">
+          <svg viewBox="0 0 24 24"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
+        </div>
+        <div>
+          <h3>Levantar Ticket</h3>
+          <p>Registra tu incidencia de soporte IT</p>
+        </div>
+      </div>
+      <button class="close-btn" onclick="closeTicket()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Nombre del solicitante -->
+      <div class="field">
+        <label>Nombre del solicitante <span>*</span></label>
+        <input type="text" id="t-name" placeholder="Ej: Juan Pérez">
+      </div>
+
+      <!-- Resumen -->
+      <div class="field">
+        <label>Resumen del problema <span>*</span></label>
+        <textarea id="t-summary" placeholder="Describe brevemente el problema que estás experimentando..."></textarea>
+      </div>
+
+      <!-- Categoría y Subcategoría -->
+      <div class="fields-row">
+        <div class="field">
+          <label>Categoría <span>*</span></label>
+          <div class="select-wrap">
+            <select id="t-category" onchange="updateSubcategory()">
+              <option value="">— Seleccionar —</option>
+              <option value="hardware">🖥️ Hardware</option>
+              <option value="software">💾 Software</option>
+              <option value="redes">🌐 Redes y Conectividad</option>
+              <option value="seguridad">🔐 Seguridad</option>
+              <option value="correo">📧 Correo Electrónico</option>
+              <option value="telefonia">📞 Telefonía</option>
+              <option value="servidores">🗄️ Servidores</option>
+              <option value="accesos">🔑 Accesos y Permisos</option>
+              <option value="impresoras">🖨️ Impresoras</option>
+              <option value="bases_datos">🗃️ Bases de Datos</option>
+              <option value="erp">📊 ERP / SAP</option>
+              <option value="usuarios">👤 Gestión de Usuarios</option>
+              <option value="respaldo">💾 Respaldo y Recuperación</option>
+              <option value="otro">🔧 Otro</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Subcategoría <span>*</span></label>
+          <div class="select-wrap">
+            <select id="t-subcategory">
+              <option value="">— Primero elige categoría —</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Área afectada y usuario afectado -->
+      <div class="fields-row">
+        <div class="field">
+          <label>Área / Departamento</label>
+          <div class="select-wrap">
+            <select id="t-area">
+              <option value="">— Seleccionar —</option>
+              <option>Administración</option>
+              <option>Recursos Humanos</option>
+              <option>Finanzas / Contabilidad</option>
+              <option>Ventas</option>
+              <option>Marketing</option>
+              <option>Operaciones</option>
+              <option>Logística</option>
+              <option>Legal / Jurídico</option>
+              <option>Tecnología / TI</option>
+              <option>Dirección General</option>
+              <option>Almacén</option>
+              <option>Producción</option>
+              <option>Compras</option>
+              <option>Servicio al Cliente</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Equipo / Activo afectado</label>
+          <input type="text" id="t-asset" placeholder="Ej: PC-0042, Impresora Piso 3">
+        </div>
+      </div>
+
+      <!-- Prioridad -->
+      <div class="field">
+        <label>Prioridad <span>*</span></label>
+        <div class="priority-grid" id="priorityGrid">
+          <div class="prio-card" data-p="1" onclick="selectPriority(1)">
+            <div class="prio-num">1</div>
+            <div class="prio-label" style="color:#22c55e">Baja</div>
+            <div class="prio-desc">Sin urgencia</div>
+          </div>
+          <div class="prio-card" data-p="2" onclick="selectPriority(2)">
+            <div class="prio-num">2</div>
+            <div class="prio-label" style="color:#60a5fa">Normal</div>
+            <div class="prio-desc">Flujo normal</div>
+          </div>
+          <div class="prio-card" data-p="3" onclick="selectPriority(3)">
+            <div class="prio-num">3</div>
+            <div class="prio-label" style="color:#ffb800">Media</div>
+            <div class="prio-desc">Requiere atención</div>
+          </div>
+          <div class="prio-card" data-p="4" onclick="selectPriority(4)">
+            <div class="prio-num">4</div>
+            <div class="prio-label" style="color:#ff4d6a">Urgente</div>
+            <div class="prio-desc">Crítico / inmediato</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Descripción detallada -->
+      <div class="field">
+        <label>Descripción detallada</label>
+        <textarea id="t-desc" placeholder="Pasos para reproducir el problema, mensajes de error, desde cuándo ocurre..." style="min-height:90px"></textarea>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeTicket()">Cancelar</button>
+      <button class="btn-submit" onclick="submitTicket()">
+        🎫 Levantar Ticket
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="ticketToast">
+  <div class="toast-icon">
+    <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+  </div>
+  <div class="toast-text">
+    <strong>¡Ticket levantado!</strong>
+    <small id="toastMsg">Tu incidencia fue registrada exitosamente.</small>
+  </div>
+</div>
+
+<!-- SIDEBAR OVERLAY (mobile) -->
+<!-- MOBILE SIDEBAR DRAWER (dialog nativo - funciona en iOS/Android) -->
+<dialog id="mobileSidebar">
+  <div id="mobileSidebarInner">
+    <!-- contenido se inyecta por JS -->
+  </div>
+</dialog>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="logo-wrap">
+      <div class="logo-avatar">
+        <img src="/static/edgarai_avatar.jpg" alt="EdgarAI">
+      </div>
+      <div class="logo-text">
+        <h1>EdgarAI</h1>
+        <span>Soporte IT Inteligente</span>
+      </div>
+    </div>
+
+    <div class="sidebar-scroll">
+      <button class="nav-btn" onclick="newChat()">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nueva conversación
+      </button>
+
+      <button class="nav-btn ticket-btn" onclick="openTicket()">
+        <svg viewBox="0 0 24 24"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
+        Levantar Ticket
+      </button>
+
+      <button class="nav-btn" id="trackingNavBtn" onclick="openTracking()" style="background:linear-gradient(135deg,rgba(124,111,247,0.1),rgba(96,165,250,0.08));border-color:rgba(124,111,247,0.2);color:#a5b4fc;margin-top:4px">
+        <svg viewBox="0 0 24 24" style="stroke:#a5b4fc;fill:none"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Ver mis Tickets
+      </button>
+
+      {% if user and user.rol == 'admin' %}
+      <button class="nav-btn" onclick="window.location.href='/admin'" style="background:linear-gradient(135deg,rgba(255,184,0,0.1),rgba(255,120,0,0.08));border-color:rgba(255,184,0,0.25);color:#fbbf24;margin-top:4px">
+        <svg viewBox="0 0 24 24" style="stroke:#fbbf24;fill:none;width:15px;height:15px"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Panel Admin
+      </button>
+      {% endif %}
+
+      <span class="section-label">Historial reciente</span>
+
+      <div class="history-item active" onclick="closeSidebar()">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        Problema con VPN corporativa
+      </div>
+      <div class="history-item" onclick="closeSidebar()">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        Error instalación Office 365
+      </div>
+      <div class="history-item" onclick="closeSidebar()">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        Reporte incidencias marzo
+      </div>
+      <div class="history-item" onclick="closeSidebar()">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        Impresora piso 2 sin tóner
+      </div>
+
+      <span class="section-label" style="margin-top:12px">Tickets recientes</span>
+
+      <div class="history-item" id="ticketHistoryList">
+        <svg viewBox="0 0 24 24"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
+        Sin tickets aún
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="avatar-sm" style="background:none;overflow:hidden;border:2px solid rgba(0,229,255,0.25);">
+          <img src="/static/edgarai_avatar.jpg" alt="Usuario" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+        </div>
+        <div class="user-info">
+          <strong id="sidebar-username">{{ user.nombre if user else 'Usuario' }}</strong>
+          <small style="color:var(--accent);font-size:10px;text-transform:uppercase;letter-spacing:0.06em">{{ user.rol if user else '' }}</small>
+        </div>
+        <button onclick="doLogout()" title="Cerrar sesión" style="background:none;border:none;cursor:pointer;color:var(--muted2);padding:4px;border-radius:6px;transition:color 0.15s" onmouseover="this.style.color='#ff7a90'" onmouseout="this.style.color='var(--muted2)'">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main id="main">
+    <header id="topbar">
+      <div class="topbar-left">
+        <div id="menuBtn" onclick="toggleSidebar()">
+          <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </div>
+        <h2>Asistente EdgarAI</h2>
+        <span class="badge">En línea</span>
+      </div>
+      <div class="topbar-right">
+        <div class="icon-btn" title="Levantar ticket" onclick="openTicket()">
+          <svg viewBox="0 0 24 24"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
+        </div>
+      </div>
+    </header>
+
+    <div id="chat-messages">
+      <div id="welcome">
+        <div class="welcome-avatar">
+          <img src="/static/edgarai_avatar.jpg" alt="EdgarAI">
+        </div>
+        <h2>¡Hola! Soy EdgarAI</h2>
+        <p>Tu asistente experto en Soporte IT. Cuéntame tu problema o solicita un reporte.</p>
+      </div>
+    </div>
+
+    <div id="imagePreviewContainer"></div>
+
+    <div id="input-area">
+      <div class="input-box">
+        <input type="file" id="imageInput" accept="image/*" hidden>
+        <textarea id="inputPregunta" placeholder="Escribe tu consulta de soporte IT..." rows="1"></textarea>
+        <div class="input-actions">
+          <button class="attach-btn" title="Adjuntar imagen" onclick="document.getElementById('imageInput').click()">
+            <svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+          </button>
+          <button class="send-btn" id="btnEnviar" title="Enviar">
+            <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="input-hint">
+        <span>Enter enviar · Shift+Enter nueva línea</span>
+        <span id="charCount">0 / 2000</span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- BOTTOM NAV MÓVIL — sin sidebar, sin problemas de z-index -->
+<nav id="bottomNav">
+  <button class="bnav-btn" id="bnav-nuevo">
+    <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+    Nuevo
+  </button>
+  <button class="bnav-btn ticket" id="bnav-ticket">
+    <svg viewBox="0 0 24 24"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
+    Ticket
+  </button>
+  <button class="bnav-btn tracking" id="bnav-tracking">
+    <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+    Mis Tickets
+  </button>
+  {% if user and user.rol == 'admin' %}
+  <button class="bnav-btn" id="bnav-admin" onclick="window.location.href='/admin'" style="color:#fbbf24">
+    <svg viewBox="0 0 24 24" style="stroke:#fbbf24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    Admin
+  </button>
+  {% endif %}
+</nav>
+
+<script>
+{% raw %}
+/* ============================================================
+   LOCAL TICKETS STORE (espejo del backend)
+============================================================ */
+let localTickets = {};  // { ticket_id: ticketObj }
+
+/* ============================================================
+   SUBCATEGORY MAP
+============================================================ */
+const SUBCATS = {
+  hardware: ['Computadora de escritorio','Laptop / Notebook','Monitor','Teclado / Mouse','Disco duro / SSD','Memoria RAM','Fuente de poder','Batería laptop','Cámara web','Headset / Audífonos','Otro dispositivo'],
+  software: ['Sistema Operativo Windows','Sistema Operativo macOS/Linux','Microsoft Office / 365','Antivirus / Seguridad endpoint','Navegador web','Software corporativo interno','Licencias y activaciones','Actualizaciones / Parches','Instalación de aplicación','Desinstalación / Limpieza','Otro software'],
+  redes: ['Sin acceso a Internet','Wi-Fi corporativo','Red LAN / Ethernet','VPN corporativa','Firewall / Proxy','Switch / Router','DNS / DHCP','Acceso remoto (RDP/SSH)','Velocidad de red lenta','Otro problema de red'],
+  seguridad: ['Posible virus / malware','Phishing / correo sospechoso','Acceso no autorizado','Bloqueo de cuenta','Política de contraseñas','Cifrado de datos','Certificados digitales','Auditoría de accesos','Pérdida / robo de dispositivo','Otro incidente de seguridad'],
+  correo: ['No recibo correos','No puedo enviar correos','Bandeja llena / cuota','Correo spam / phishing','Outlook / cliente de correo','Webmail corporativo','Configuración de cuenta','Firma electrónica','Distribución / listas de correo','Otro problema de correo'],
+  telefonia: ['Teléfono de escritorio','Softphone / IP','Videollamadas (Teams/Zoom)','No hay tono de llamada','Problemas de audio','Extensiones corporativas','Configuración de central','Otro problema de telefonía'],
+  servidores: ['Servidor caído / sin respuesta','Alto consumo de recursos','Espacio en disco lleno','Backup / respaldo falló','Servicio web / app caído','Base de datos inaccesible','Virtualización (VMware/Hyper-V)','Actualización de servidor','Certificado SSL vencido','Otro problema de servidor'],
+  accesos: ['Alta de usuario nuevo','Baja de usuario','Reseteo de contraseña','Permisos de carpetas','Acceso a sistema corporativo','Acceso a servidor','Acceso VPN','Multifactor (MFA/2FA)','Directorio Activo / LDAP','Otro tema de accesos'],
+  impresoras: ['Sin conexión a impresora','Atasco de papel','Tóner / cartucho vacío','Impresión distorsionada','Impresora no imprime','Configuración de impresora de red','Escáner no funciona','Driver de impresora','Otro problema de impresora'],
+  bases_datos: ['Consulta lenta','Base de datos caída','Error de conexión','Problema de permisos DB','Corrupción de datos','Migración de datos','Restaurar backup DB','Espacio en DB','Otro problema de BD'],
+  erp: ['Error en módulo de compras','Error en módulo de ventas','Error en módulo contable','Integración con otros sistemas','Rendimiento lento en ERP','Acceso a transacción SAP','Reporte / consulta ERP','Actualización de ERP','Otro problema ERP'],
+  usuarios: ['Crear nueva cuenta','Deshabilitar cuenta','Cambio de nombre/datos','Asignación de equipo','Onboarding nuevo empleado','Offboarding / baja','Cambio de departamento','Sincronización de directorios','Otro tema de usuarios'],
+  respaldo: ['Backup fallido','Recuperación de archivo','Recuperación de carpeta','Restaurar a fecha anterior','Backup de correo','Política de retención','Verificación de integridad','Otro tema de respaldo'],
+  otro: ['Consulta general','Solicitud de información','Mejora / sugerencia','Solicitud de compra de equipo','Capacitación / entrenamiento','Otro']
+};
+
+function updateSubcategory() {
+  const cat = document.getElementById('t-category').value;
+  const sub = document.getElementById('t-subcategory');
+  sub.innerHTML = '';
+  if (!cat || !SUBCATS[cat]) {
+    sub.innerHTML = '<option value="">— Primero elige categoría —</option>';
+    return;
+  }
+  sub.innerHTML = '<option value="">— Seleccionar subcategoría —</option>';
+  SUBCATS[cat].forEach(s => {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = s;
+    sub.appendChild(o);
+  });
+}
+
+/* ============================================================
+   PRIORITY
+============================================================ */
+let selectedPriority = null;
+
+function selectPriority(n) {
+  selectedPriority = n;
+  document.querySelectorAll('.prio-card').forEach(c => c.classList.remove('selected'));
+  document.querySelector(`.prio-card[data-p="${n}"]`).classList.add('selected');
+}
+
+/* ============================================================
+   TICKET MODAL
+============================================================ */
+function openTicket() {
+  closeTracking();
+  const overlay = document.getElementById('ticketOverlay');
+  overlay.style.display = 'flex';
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  document.body.style.position = 'fixed';
+  document.body.style.width = '100%';
+}
+
+function closeTicket() {
+  const overlay = document.getElementById('ticketOverlay');
+  overlay.style.display = 'none';
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+  document.body.style.position = '';
+  document.body.style.width = '';
+}
+
+let ticketCounter = 0;
+
+function submitTicket() {
+  const name    = document.getElementById('t-name').value.trim();
+  const summary = document.getElementById('t-summary').value.trim();
+  const cat     = document.getElementById('t-category').value;
+  const sub     = document.getElementById('t-subcategory').value;
+
+  if (!name)    { alert('Por favor ingresa el nombre del solicitante.'); return; }
+  if (!summary) { alert('Por favor ingresa un resumen del problema.'); return; }
+  if (!cat)     { alert('Por favor selecciona una categoría.'); return; }
+  if (!sub)     { alert('Por favor selecciona una subcategoría.'); return; }
+  if (!selectedPriority) { alert('Por favor selecciona la prioridad del ticket.'); return; }
+
+  const prioLabels = { 1:'Baja', 2:'Normal', 3:'Media', 4:'Urgente' };
+  const prioColors = { 1:'#22c55e', 2:'#60a5fa', 3:'#ffb800', 4:'#ff4d6a' };
+  ticketCounter++;
+  const ticketId = 'TKT-' + String(ticketCounter).padStart(4,'0');
+
+  // Objeto ticket
+  const ticketObj = {
+    id:           ticketId,
+    nombre:       name,
+    resumen:      summary,
+    categoria:    document.getElementById('t-category').options[document.getElementById('t-category').selectedIndex].text.replace(/^.+ /,''),
+    subcategoria: document.getElementById('t-subcategory').value,
+    area:         document.getElementById('t-area').value,
+    activo:       document.getElementById('t-asset').value,
+    descripcion:  document.getElementById('t-desc').value.trim(),
+    prioridad:    selectedPriority,
+    estado:       'Abierto',
+    creado_en:    new Date().toLocaleString('es-MX', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),
+    actualizado_en: new Date().toLocaleString('es-MX', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),
+    historial_estados: [{ estado:'Abierto', fecha: new Date().toLocaleString('es-MX', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}), nota:'Ticket creado' }]
+  };
+
+  // Guardar localmente
+  localTickets[ticketId] = ticketObj;
+
+  // Intentar sincronizar con el backend
+  fetch('/tickets', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      nombre: ticketObj.nombre, resumen: ticketObj.resumen,
+      categoria: ticketObj.categoria, subcategoria: ticketObj.subcategoria,
+      area: ticketObj.area, activo: ticketObj.activo,
+      descripcion: ticketObj.descripcion, prioridad: ticketObj.prioridad
+    })
+  }).catch(() => {}); // Si el backend no responde, seguimos con la copia local
+
+  // Add to chat
+  const chatMsg = `🎫 <strong>Ticket levantado: ${ticketId}</strong><br>
+<strong>Solicitante:</strong> ${name}<br>
+<strong>Resumen:</strong> ${summary}<br>
+<strong>Categoría:</strong> ${cat.toUpperCase()} → ${sub}<br>
+<strong>Área:</strong> ${document.getElementById('t-area').value || 'No especificada'}<br>
+<strong>Prioridad:</strong> <span style="color:${prioColors[selectedPriority]};font-weight:700">${selectedPriority} — ${prioLabels[selectedPriority]}</span><br>
+<span style="color:var(--muted2);font-size:12px">Registrado el ${new Date().toLocaleString('es-MX')}</span>`;
+  addMessage('ai', chatMsg);
+
+  // Add to sidebar history
+  const hist = document.getElementById('ticketHistoryList');
+  if (hist.textContent.includes('Sin tickets')) hist.outerHTML = '';
+  const li = document.createElement('div');
+  li.className = 'history-item';
+  li.innerHTML = `<svg viewBox="0 0 24 24"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>${ticketId}: ${summary.slice(0,28)}...`;
+  document.querySelector('.sidebar-scroll').appendChild(li);
+
+  // Toast
+  document.getElementById('toastMsg').textContent = `${ticketId} registrado correctamente.`;
+  const toast = document.getElementById('ticketToast');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 4000);
+
+  // Reset form
+  document.getElementById('t-name').value = '';
+  document.getElementById('t-summary').value = '';
+  document.getElementById('t-category').value = '';
+  document.getElementById('t-subcategory').innerHTML = '<option value="">— Primero elige categoría —</option>';
+  document.getElementById('t-area').value = '';
+  document.getElementById('t-asset').value = '';
+  document.getElementById('t-desc').value = '';
+  selectedPriority = null;
+  document.querySelectorAll('.prio-card').forEach(c => c.classList.remove('selected'));
+
+  closeTicket();
+}
+
+/* ============================================================
+   CHAT ENGINE
+============================================================ */
+let conversationHistory = [];
+let isThinking = false;
+
+function scrollBottom() {
+  const c = document.getElementById('chat-messages');
+  c.scrollTop = c.scrollHeight;
+}
+
+function hideWelcome() {
+  const w = document.getElementById('welcome');
+  if (w) w.remove();
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 110) + 'px';
+}
+
+function addMessage(role, html) {
+  hideWelcome();
+  const chat = document.getElementById('chat-messages');
+  const row = document.createElement('div');
+  row.className = 'msg-row ' + (role === 'user' ? 'user' : 'ai');
+
+  const av = document.createElement('div');
+  av.className = 'msg-av';
+  if (role === 'user') {
+    av.style.display = 'none';
+  } else {
+    av.innerHTML = `<img src="/static/edgarai_avatar.jpg" alt="EdgarAI">`;
+  }
+
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble';
+  bubble.innerHTML = html;
+
+  row.appendChild(av); row.appendChild(bubble);
+  chat.appendChild(row);
+  scrollBottom();
+  return bubble;
+}
+
+function addTyping() {
+  hideWelcome();
+  const chat = document.getElementById('chat-messages');
+  const row = document.createElement('div');
+  row.className = 'msg-row ai'; row.id = 'typing-row';
+  const av = document.createElement('div'); av.className = 'msg-av';
+  av.innerHTML = `<img src="/static/edgarai_avatar.jpg" alt="EdgarAI">`;
+  const bubble = document.createElement('div'); bubble.className = 'msg-bubble';
+  bubble.innerHTML = `<div class="typing-dots"><span></span><span></span><span></span></div>`;
+  row.appendChild(av); row.appendChild(bubble);
+  chat.appendChild(row); scrollBottom();
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing-row'); if (t) t.remove();
+}
+
+function formatResponse(t) {
+  return t
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/`(.*?)`/g, '<code style="background:rgba(0,229,255,0.1);padding:2px 6px;border-radius:4px;font-size:12.5px;color:var(--accent)">`$1`</code>')
+    .replace(/\n/g, '<br>');
+}
+
+async function sendMessage(text, imageFile) {
+  if (!text && !imageFile) return;
+  if (isThinking) return;
+  isThinking = true;
+
+  addMessage('user', (text || '📎 Imagen adjunta').replace(/\n/g, '<br>'));
+  conversationHistory.push({ role: 'user', content: text || '(imagen)' });
+
+  const ta = document.getElementById('inputPregunta');
+  ta.value = ''; ta.style.height = 'auto';
+  document.getElementById('imageInput').value = '';
+  document.getElementById('imagePreviewContainer').innerHTML = '';
+  document.getElementById('charCount').textContent = '0 / 2000';
+
+  addTyping();
+  const fd = new FormData();
+  fd.append('message', text || '');
+  if (imageFile) fd.append('image', imageFile);
+
+  try {
+    const res = await fetch('/ask', { method: 'POST', body: fd });
+    const data = await res.json();
+    removeTyping();
+    addMessage('ai', formatResponse(data.response || 'Sin respuesta del servidor.'));
+    conversationHistory.push({ role: 'assistant', content: data.response });
+  } catch (e) {
+    removeTyping();
+    addMessage('ai', '⚠️ <strong>Error de conexión.</strong> Verifica que el servidor Python esté activo en <code>/ask</code>.');
+  }
+  isThinking = false;
+}
+
+function quickSend(t) { sendMessage(t, null); }
+
+function newChat() {
+  closeTicket();
+  closeTracking();
+  conversationHistory = [];
+  const chat = document.getElementById('chat-messages');
+  chat.innerHTML = '';
+  const w = document.createElement('div'); w.id = 'welcome';
+  w.innerHTML = `
+    <div class="welcome-avatar"><img src="/static/edgarai_avatar.jpg" alt="EdgarAI"></div>
+    <h2>¡Hola! Soy EdgarAI</h2>
+    <p>Tu asistente experto en Soporte IT. Cuéntame tu problema o solicita un reporte.</p>`;
+  chat.appendChild(w);
+  closeSidebar();
+}
+
+function exportChat() {
+  if (!conversationHistory.length) { alert('No hay conversación para exportar.'); return; }
+  let txt = '=== EdgarAI — Exportación ===\n\n';
+  conversationHistory.forEach(m => { txt += `[${m.role === 'user' ? 'Usuario' : 'EdgarAI'}]\n${m.content}\n\n`; });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([txt], { type: 'text/plain' }));
+  a.download = 'edgarai_' + new Date().toISOString().slice(0,10) + '.txt';
+  a.click();
+}
+
+/* ============================================================
+   MOBILE SIDEBAR
+============================================================ */
+/* ============================================================
+   MOBILE SIDEBAR — <dialog> nativo (iOS/Android compatible)
+============================================================ */
+function toggleSidebar() {
+  if (window.innerWidth > 768) return;
+
+  const dlg = document.getElementById('mobileSidebar');
+  if (dlg.open) { closeSidebar(); return; }
+
+  const inner   = document.getElementById('mobileSidebarInner');
+  const sidebar = document.getElementById('sidebar');
+
+  // Clonar contenido
+  inner.innerHTML = sidebar.innerHTML;
+
+  // Asignar botones por data-action para no depender del índice
+  const btns = inner.querySelectorAll('.nav-btn');
+  btns.forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const text = btn.textContent.trim().toLowerCase();
+      closeSidebar();
+      if (text.includes('nueva'))    { setTimeout(newChat, 50); }
+      else if (text.includes('ticket') && !text.includes('ver')) { setTimeout(openTicket, 50); }
+      else if (text.includes('ver'))  { setTimeout(openTracking, 50); }
+    });
+  });
+
+  inner.querySelectorAll('.history-item').forEach(el => {
+    el.addEventListener('click', function(e) {
+      e.stopPropagation();
+      closeSidebar();
+    });
+  });
+
+  dlg.showModal();
+  document.body.style.overflow = 'hidden';
+
+  // Cerrar SOLO si toca el backdrop (fuera del panel)
+  dlg.addEventListener('click', function handler(e) {
+    const rect = inner.getBoundingClientRect();
+    const outside = e.clientX < rect.left || e.clientX > rect.right ||
+                    e.clientY < rect.top  || e.clientY > rect.bottom;
+    if (outside) { closeSidebar(); dlg.removeEventListener('click', handler); }
+  });
+}
+
+function closeSidebar() {
+  const dlg = document.getElementById('mobileSidebar');
+  if (dlg && dlg.open) dlg.close();
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ============================================================
+   INPUT EVENTS
+============================================================ */
+const ta = document.getElementById('inputPregunta');
+const imgIn = document.getElementById('imageInput');
+
+document.getElementById('btnEnviar').addEventListener('click', () => {
+  sendMessage(ta.value.trim(), imgIn.files[0]);
+});
+
+ta.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(ta.value.trim(), imgIn.files[0]); }
+});
+ta.addEventListener('input', function() {
+  autoResize(this);
+  const n = this.value.length;
+  document.getElementById('charCount').textContent = n + ' / 2000';
+  if (n > 2000) this.value = this.value.slice(0,2000);
+});
+
+imgIn.addEventListener('change', () => {
+  const f = imgIn.files[0]; const cont = document.getElementById('imagePreviewContainer');
+  cont.innerHTML = '';
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = e => {
+    const w = document.createElement('div'); w.className = 'img-preview-thumb';
+    w.innerHTML = `<img src="${e.target.result}"><button class="img-remove" onclick="clearImg()">✕</button>`;
+    cont.appendChild(w);
+  };
+  r.readAsDataURL(f);
+});
+
+function clearImg() {
+  imgIn.value = '';
+  document.getElementById('imagePreviewContainer').innerHTML = '';
+}
+
+/* ============================================================
+   TICKET TRACKING
+============================================================ */
+let currentFilter  = 'all';
+let selectedTicket = null;
+
+async function openTracking() {
+  closeTicket();
+  const overlay = document.getElementById('trackingOverlay');
+  overlay.style.display = 'flex';
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  document.body.style.position = 'fixed';
+  document.body.style.width = '100%';
+
+  document.getElementById('trackingCount').textContent = 'Cargando tickets...';
+  try {
+    const res  = await fetch('/tickets');
+    const data = await res.json();
+    localTickets = {};
+    (data.tickets || []).forEach(t => {
+      if (typeof t.historial_estados === 'string') {
+        t.historial_estados = JSON.parse(t.historial_estados);
+      }
+      localTickets[t.id] = t;
+    });
+  } catch(e) {
+    console.error('Error cargando tickets:', e);
+  }
+
+  showTicketList();
+}
+
+function closeTracking() {
+  const overlay = document.getElementById('trackingOverlay');
+  overlay.style.display = 'none';
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+  document.body.style.position = '';
+  document.body.style.width = '';
+  selectedTicket = null;
+}
+
+function showTicketList() {
+  document.getElementById('trackingListWrap').style.display = 'block';
+  document.getElementById('ticketDetail').classList.remove('open');
+  renderTickets(currentFilter);
+}
+
+function backToList() {
+  showTicketList();
+}
+
+function filterTickets(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTickets(filter);
+}
+
+function renderTickets(filter) {
+  const list = document.getElementById('trackingList');
+  const countEl = document.getElementById('trackingCount');
+
+  let tickets = Object.values(localTickets);
+  if (filter !== 'all') tickets = tickets.filter(t => t.estado === filter);
+  tickets.sort((a, b) => b.prioridad - a.prioridad);
+
+  countEl.textContent = `${tickets.length} ticket${tickets.length !== 1 ? 's' : ''} encontrado${tickets.length !== 1 ? 's' : ''}`;
+
+  if (!tickets.length) {
+    list.innerHTML = `<div class="empty-state"><div class="es-icon">🎫</div>No hay tickets ${filter !== 'all' ? 'con estado "' + filter + '"' : 'registrados aún'}.</div>`;
+    return;
+  }
+
+  const prioLabels = { 1:'Baja', 2:'Normal', 3:'Media', 4:'Urgente' };
+  list.innerHTML = tickets.map(t => `
+    <div class="ticket-card" onclick="showDetail('${t.id}')">
+      <div class="ticket-card-top">
+        <span class="ticket-id">${t.id}</span>
+        <span class="estado-badge estado-${t.estado}">${t.estado}</span>
+      </div>
+      <div class="ticket-resumen">${t.resumen}</div>
+      <div class="ticket-meta">
+        <span><div class="prio-dot prio-dot-${t.prioridad}"></div> P${t.prioridad} ${prioLabels[t.prioridad]}</span>
+        <span>📂 ${t.categoria}</span>
+        <span>🕐 ${t.creado_en}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function showDetail(ticketId) {
+  selectedTicket = localTickets[ticketId];
+  if (!selectedTicket) return;
+
+  document.getElementById('trackingListWrap').style.display = 'none';
+  const detail = document.getElementById('ticketDetail');
+  detail.classList.add('open');
+
+  const prioLabels = { 1:'🟢 Baja', 2:'🔵 Normal', 3:'🟡 Media', 4:'🔴 Urgente' };
+  const t = selectedTicket;
+
+  document.getElementById('detailGrid').innerHTML = `
+    <div class="detail-item" style="grid-column:1/-1">
+      <label>Resumen</label><span>${t.resumen}</span>
+    </div>
+    <div class="detail-item"><label>ID</label><span>${t.id}</span></div>
+    <div class="detail-item"><label>Solicitante</label><span>${t.nombre}</span></div>
+    <div class="detail-item"><label>Categoría</label><span>${t.categoria}</span></div>
+    <div class="detail-item"><label>Subcategoría</label><span>${t.subcategoria}</span></div>
+    <div class="detail-item"><label>Área</label><span>${t.area || '—'}</span></div>
+    <div class="detail-item"><label>Activo</label><span>${t.activo || '—'}</span></div>
+    <div class="detail-item"><label>Prioridad</label><span>${prioLabels[t.prioridad]}</span></div>
+    <div class="detail-item"><label>Creado</label><span>${t.creado_en}</span></div>
+    ${t.descripcion ? `<div class="detail-item" style="grid-column:1/-1"><label>Descripción</label><span>${t.descripcion}</span></div>` : ''}
+  `;
+
+  // Estado actual label
+  document.getElementById('currentEstadoLabel').textContent = t.estado;
+
+  // Highlight active state button
+  document.querySelectorAll('.estado-change-btn').forEach(b => b.classList.remove('s-active'));
+  const map = { 'Abierto': 's-abierto', 'En progreso': 's-progreso', 'Cerrado': 's-cerrado' };
+  document.querySelector('.' + map[t.estado])?.classList.add('s-active');
+
+  // Timeline
+  renderTimeline(t.historial_estados);
+}
+
+function renderTimeline(history) {
+  const tl = document.getElementById('detailTimeline');
+  const dotClass = { 'Abierto': 'tl-dot-abierto', 'En progreso': 'tl-dot-progreso', 'Cerrado': 'tl-dot-cerrado', 'Resuelto': 'tl-dot-resuelto'};
+  tl.innerHTML = [...history].reverse().map(h => `
+    <div class="timeline-item">
+      <div class="tl-dot ${dotClass[h.estado] || 'tl-dot-abierto'}"></div>
+      <div class="tl-content">
+        <strong>${h.estado}</strong>
+        <small>${h.fecha}</small>
+        <p>${h.nota}</p>
+      </div>
+    </div>
+  `).join('');
+}
+
+function changeEstado(nuevoEstado) {
+  if (!selectedTicket) return;
+  if (selectedTicket.estado === nuevoEstado) return;
+
+  const nota = nuevoEstado === 'En progreso'
+    ? 'Ticket tomado, en atención'
+    : nuevoEstado === 'Cerrado'
+      ? 'Incidencia resuelta y cerrada'
+      : 'Ticket reabierto';
+
+  selectedTicket.estado          = nuevoEstado;
+  selectedTicket.actualizado_en  = new Date().toLocaleString('es-MX', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  selectedTicket.historial_estados.push({
+    estado: nuevoEstado,
+    fecha:  selectedTicket.actualizado_en,
+    nota
+  });
+
+  // Refrescar vista de detalle
+  showDetail(selectedTicket.id);
+
+  // Actualizar sidebar history item si existe
+  updateSidebarTicket(selectedTicket);
+
+  // Notificación en chat
+  const estadoColor = { 'Abierto':'#22c55e','En progreso':'#ffb800','Cerrado':var_muted2 };
+  addMessage('ai', `✅ <strong>${selectedTicket.id}</strong> actualizado a <strong style="color:${{'Abierto':'#22c55e','En progreso':'#ffb800','Cerrado':'#94a3b8'}[nuevoEstado]}">${nuevoEstado}</strong>`);
+}
+
+function updateSidebarTicket(ticket) {
+  // Update sidebar count badge if needed
+  const countBadge = document.getElementById('ticketCountBadge');
+  if (countBadge) {
+    const open = Object.values(localTickets).filter(t => t.estado !== 'Cerrado').length;
+    countBadge.textContent = open || '';
+  }
+}
+
+// Close tracking on overlay click
+document.getElementById('trackingOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('trackingOverlay')) closeTracking();
+});
+
+// Fix móvil: scroll al fondo cuando aparece el teclado virtual
+document.getElementById('inputPregunta').addEventListener('focus', () => {
+  setTimeout(() => scrollBottom(), 350);
+});
+
+// Bottom nav — registrar con addEventListener para máxima compatibilidad iOS
+document.getElementById('bnav-nuevo').addEventListener('click',    function() { newChat(); });
+document.getElementById('bnav-ticket').addEventListener('click',   function() { openTicket(); });
+document.getElementById('bnav-tracking').addEventListener('click', function() { openTracking(); });
+
+// Logout
+async function doLogout() {
+  await fetch('/auth/logout', { method:'POST' });
+  window.location.href = '/login';
+}
+
+{% endraw %}
+</script>

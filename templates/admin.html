@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EdgarAI — Panel Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #080b10;
+  --surface: #0f1218;
+  --surface2:#161b24;
+  --surface3:#1c2330;
+  --border:  rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --accent:  #00e5ff;
+  --accent2: #7c6ff7;
+  --text:    #e8eaf0;
+  --muted:   #4a5568;
+  --muted2:  #718096;
+  --green:   #22c55e;
+  --yellow:  #f59e0b;
+  --red:     #ef4444;
+  --blue:    #3b82f6;
+  --fh: 'Syne', sans-serif;
+  --fb: 'DM Sans', sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body { height:100%; font-family:var(--fb); background:var(--bg); color:var(--text); }
+
+/* ── TOPBAR ── */
+#topbar {
+  height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px;
+  position: sticky; top: 0; z-index: 100;
+}
+.topbar-left { display:flex; align-items:center; gap:14px; }
+.topbar-logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
+.topbar-logo img { width:32px; height:32px; border-radius:8px; object-fit:cover; }
+.topbar-logo span { font-family:var(--fh); font-size:15px; font-weight:700; color:#fff; }
+.topbar-badge {
+  background: linear-gradient(135deg, rgba(0,229,255,0.15), rgba(124,111,247,0.15));
+  border: 1px solid rgba(0,229,255,0.2);
+  border-radius:6px; padding:3px 10px;
+  font-size:11px; font-weight:600; color:var(--accent);
+  text-transform:uppercase; letter-spacing:0.08em;
+}
+.topbar-right { display:flex; align-items:center; gap:12px; }
+.user-info { text-align:right; }
+.user-info strong { display:block; font-size:13px; font-weight:500; }
+.user-info small  { font-size:11px; color:var(--muted2); }
+.btn-logout {
+  background: rgba(255,77,106,0.1); border:1px solid rgba(255,77,106,0.2);
+  border-radius:8px; padding:7px 14px;
+  font-family:var(--fb); font-size:12px; font-weight:600; color:#ff7a90;
+  cursor:pointer; transition:all 0.2s;
+}
+.btn-logout:hover { background:rgba(255,77,106,0.2); }
+.btn-chat {
+  background: rgba(0,229,255,0.1); border:1px solid rgba(0,229,255,0.2);
+  border-radius:8px; padding:7px 14px;
+  font-family:var(--fb); font-size:12px; font-weight:600; color:var(--accent);
+  cursor:pointer; transition:all 0.2s; text-decoration:none; display:flex; align-items:center; gap:6px;
+}
+.btn-chat:hover { background:rgba(0,229,255,0.18); }
+
+/* ── LAYOUT ── */
+#app { display:flex; height:calc(100vh - 56px); overflow:hidden; }
+
+/* ── PANEL LISTA ── */
+#panel-list {
+  width: 100%; display:flex; flex-direction:column;
+  transition: width 0.3s ease;
+}
+#panel-list.split { width: 45%; border-right:1px solid var(--border); }
+
+/* ── TOOLBAR ── */
+.toolbar {
+  padding: 16px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+}
+.toolbar h2 { font-family:var(--fh); font-size:16px; font-weight:700; margin-right:4px; }
+.ticket-count {
+  background:rgba(0,229,255,0.1); border:1px solid rgba(0,229,255,0.2);
+  border-radius:20px; padding:2px 10px; font-size:12px; color:var(--accent);
+}
+.toolbar-filters { display:flex; gap:8px; margin-left:auto; flex-wrap:wrap; }
+.filter-btn {
+  padding:6px 14px; border-radius:8px; border:1px solid var(--border2);
+  background:transparent; color:var(--muted2); font-family:var(--fb);
+  font-size:12px; font-weight:600; cursor:pointer; transition:all 0.15s;
+  text-transform:uppercase; letter-spacing:0.05em;
+}
+.filter-btn:hover { background:var(--surface2); color:var(--text); }
+.filter-btn.active { background:var(--surface2); color:var(--text); border-color:var(--border2); }
+.filter-btn.f-abierto.active  { border-color:var(--green); color:var(--green); }
+.filter-btn.f-progreso.active { border-color:var(--yellow); color:var(--yellow); }
+.filter-btn.f-resuelto.active { border-color:var(--blue); color:var(--blue); }
+.filter-btn.f-cerrado.active  { border-color:var(--muted); color:var(--muted2); }
+
+.search-box {
+  display:flex; align-items:center; gap:8px;
+  background:var(--surface2); border:1px solid var(--border2);
+  border-radius:9px; padding:7px 12px; min-width:200px;
+}
+.search-box input {
+  background:none; border:none; outline:none;
+  color:var(--text); font-family:var(--fb); font-size:13px; width:100%;
+}
+.search-box input::placeholder { color:var(--muted); }
+.search-box svg { width:14px; height:14px; stroke:var(--muted); flex-shrink:0; }
+
+/* ── TABLE ── */
+.table-wrap { flex:1; overflow-y:auto; }
+table { width:100%; border-collapse:collapse; }
+thead th {
+  padding:10px 16px; text-align:left;
+  font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:0.07em; color:var(--muted2);
+  background:var(--surface); border-bottom:1px solid var(--border);
+  position:sticky; top:0; z-index:5; white-space:nowrap;
+}
+tbody tr {
+  border-bottom:1px solid var(--border);
+  cursor:pointer; transition:background 0.12s;
+}
+tbody tr:hover { background:var(--surface2); }
+tbody tr.selected { background:rgba(0,229,255,0.05); border-left:3px solid var(--accent); }
+tbody td { padding:11px 16px; font-size:13px; vertical-align:middle; }
+
+.folio-link { color:var(--accent); font-weight:600; font-size:12px; font-family:var(--fh); }
+.td-desc { max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text); }
+.td-user { color:var(--muted2); font-size:12px; }
+.td-date { color:var(--muted2); font-size:11px; white-space:nowrap; }
+
+/* Prioridad dots */
+.prio { display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; }
+.prio-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.prio-1 .prio-dot { background:#22c55e; }
+.prio-2 .prio-dot { background:#3b82f6; }
+.prio-3 .prio-dot { background:#f59e0b; }
+.prio-4 .prio-dot { background:#ef4444; }
+.prio-1 { color:#22c55e; }
+.prio-2 { color:#3b82f6; }
+.prio-3 { color:#f59e0b; }
+.prio-4 { color:#ef4444; }
+
+/* Estado badges */
+.badge-estado {
+  display:inline-block; padding:3px 10px; border-radius:20px;
+  font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;
+  white-space:nowrap;
+}
+.badge-Abierto    { background:rgba(34,197,94,0.12);  color:#22c55e;  border:1px solid rgba(34,197,94,0.2); }
+.badge-En.progreso,.badge-En_progreso { background:rgba(245,158,11,0.12); color:#f59e0b; border:1px solid rgba(245,158,11,0.2); }
+.badge-Resuelto   { background:rgba(59,130,246,0.12); color:#3b82f6;  border:1px solid rgba(59,130,246,0.2); }
+.badge-Cerrado    { background:rgba(100,116,139,0.12);color:#64748b;  border:1px solid rgba(100,116,139,0.2); }
+
+/* ── PANEL DETALLE ── */
+#panel-detail {
+  width:55%; display:none; flex-direction:column;
+  background:var(--surface); overflow-y:auto;
+}
+#panel-detail.open { display:flex; }
+
+.detail-header {
+  padding:20px 24px 16px;
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+  position:sticky; top:0; background:var(--surface); z-index:10;
+}
+.detail-folio { font-family:var(--fh); font-size:13px; color:var(--accent); font-weight:700; }
+.detail-title { font-family:var(--fh); font-size:17px; font-weight:700; color:#fff; margin-top:4px; }
+.detail-meta  { font-size:12px; color:var(--muted2); margin-top:4px; }
+.btn-close-detail {
+  background:var(--surface2); border:1px solid var(--border2);
+  border-radius:8px; width:32px; height:32px;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; flex-shrink:0; color:var(--muted2); transition:all 0.15s;
+}
+.btn-close-detail:hover { color:var(--text); border-color:var(--border2); }
+
+.detail-body { padding:20px 24px; display:flex; flex-direction:column; gap:20px; }
+
+.detail-section { display:flex; flex-direction:column; gap:8px; }
+.section-title {
+  font-size:10px; font-weight:700; text-transform:uppercase;
+  letter-spacing:0.1em; color:var(--muted2);
+}
+.info-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:10px;
+}
+.info-item { background:var(--surface2); border-radius:10px; padding:10px 14px; }
+.info-item label { display:block; font-size:10px; color:var(--muted2); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:3px; }
+.info-item span  { font-size:13px; color:var(--text); font-weight:500; }
+
+.desc-box {
+  background:var(--surface2); border-radius:10px; padding:14px;
+  font-size:13px; color:var(--text); line-height:1.6; white-space:pre-wrap;
+}
+
+/* Historial */
+.timeline { display:flex; flex-direction:column; gap:0; }
+.tl-item {
+  display:flex; gap:12px; padding:10px 0;
+  border-left:2px solid var(--border); margin-left:8px; padding-left:16px;
+  position:relative;
+}
+.tl-item::before {
+  content:''; position:absolute; left:-5px; top:14px;
+  width:8px; height:8px; border-radius:50%;
+  background:var(--accent2); border:2px solid var(--bg);
+}
+.tl-item:last-child { border-left-color:transparent; }
+.tl-estado { font-size:12px; font-weight:600; }
+.tl-nota   { font-size:12px; color:var(--muted2); margin-top:2px; }
+.tl-fecha  { font-size:11px; color:var(--muted); margin-top:2px; }
+
+/* Acción admin */
+.action-box {
+  background:var(--surface2); border:1px solid var(--border2);
+  border-radius:14px; padding:16px;
+  display:flex; flex-direction:column; gap:12px;
+}
+.action-box h4 { font-family:var(--fh); font-size:13px; font-weight:700; }
+
+.estado-btns { display:flex; gap:8px; flex-wrap:wrap; }
+.btn-estado {
+  padding:8px 16px; border-radius:9px; border:1px solid var(--border2);
+  background:var(--surface); color:var(--muted2);
+  font-family:var(--fb); font-size:12px; font-weight:600;
+  cursor:pointer; transition:all 0.15s; text-transform:uppercase; letter-spacing:0.04em;
+}
+.btn-estado:hover { background:var(--surface3); color:var(--text); }
+.btn-estado.sel-Abierto    { background:rgba(34,197,94,0.15);  color:#22c55e;  border-color:rgba(34,197,94,0.3); }
+.btn-estado.sel-En_progreso{ background:rgba(245,158,11,0.15); color:#f59e0b;  border-color:rgba(245,158,11,0.3); }
+.btn-estado.sel-Resuelto   { background:rgba(59,130,246,0.15); color:#3b82f6;  border-color:rgba(59,130,246,0.3); }
+.btn-estado.sel-Cerrado    { background:rgba(100,116,139,0.15);color:#94a3b8;  border-color:rgba(100,116,139,0.3); }
+
+.solucion-area {
+  width:100%; background:var(--surface); border:1px solid var(--border2);
+  border-radius:10px; padding:12px; color:var(--text);
+  font-family:var(--fb); font-size:13px; resize:vertical; min-height:80px;
+  outline:none; transition:border-color 0.2s;
+}
+.solucion-area:focus { border-color:rgba(0,229,255,0.4); }
+.solucion-area::placeholder { color:var(--muted); }
+
+.btn-guardar {
+  background:linear-gradient(135deg, var(--accent), var(--accent2));
+  border:none; border-radius:10px; padding:11px 20px;
+  font-family:var(--fh); font-size:13px; font-weight:700; color:#000;
+  cursor:pointer; transition:all 0.2s; align-self:flex-end;
+}
+.btn-guardar:hover { opacity:0.9; }
+.btn-guardar:disabled { opacity:0.5; cursor:default; }
+
+/* Empty state */
+.empty-state {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  height:100%; gap:12px; color:var(--muted2); padding:40px;
+}
+.empty-state svg { width:48px; height:48px; stroke:var(--muted); fill:none; opacity:0.4; }
+.empty-state p { font-size:14px; }
+
+/* Loading */
+.loading { text-align:center; padding:40px; color:var(--muted2); font-size:14px; }
+
+/* Stats bar */
+.stats-bar {
+  display:flex; gap:16px; padding:12px 20px;
+  background:var(--surface); border-bottom:1px solid var(--border);
+  overflow-x:auto;
+}
+.stat-chip {
+  display:flex; align-items:center; gap:6px;
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:8px; padding:6px 12px; white-space:nowrap;
+}
+.stat-chip span { font-size:12px; color:var(--muted2); }
+.stat-chip strong { font-size:14px; font-weight:700; }
+.stat-chip.s-total  strong { color:var(--text); }
+.stat-chip.s-open   strong { color:#22c55e; }
+.stat-chip.s-prog   strong { color:#f59e0b; }
+.stat-chip.s-res    strong { color:#3b82f6; }
+.stat-chip.s-closed strong { color:#64748b; }
+
+/* Toast */
+#toast {
+  position:fixed; bottom:24px; right:24px; z-index:9999;
+  background:var(--surface); border:1px solid var(--border2);
+  border-radius:12px; padding:12px 20px;
+  font-size:13px; font-weight:500;
+  box-shadow:0 8px 32px rgba(0,0,0,0.4);
+  transform:translateY(80px); opacity:0;
+  transition:all 0.3s ease; pointer-events:none;
+}
+#toast.show { transform:translateY(0); opacity:1; }
+#toast.ok  { border-color:rgba(34,197,94,0.4); color:#22c55e; }
+#toast.err { border-color:rgba(239,68,68,0.4);  color:#ef4444; }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header id="topbar">
+  <div class="topbar-left">
+    <a href="/" class="topbar-logo">
+      <img src="/static/edgarai_avatar.jpg" alt="EdgarAI">
+      <span>EdgarAI</span>
+    </a>
+    <div class="topbar-badge">Panel Admin</div>
+  </div>
+  <div class="topbar-right">
+    <div class="user-info">
+      <strong>{{ user.nombre }}</strong>
+      <small>{{ user.rol }}</small>
+    </div>
+    <a href="/" class="btn-chat">
+      <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="2">
+        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+      </svg>
+      Ir al Chat
+    </a>
+    <button class="btn-logout" onclick="doLogout()">Cerrar Sesión</button>
+  </div>
+</header>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- PANEL LISTA -->
+  <div id="panel-list">
+
+    <!-- Stats -->
+    <div class="stats-bar">
+      <div class="stat-chip s-total">
+        <span>Total</span><strong id="stat-total">—</strong>
+      </div>
+      <div class="stat-chip s-open">
+        <span>Abiertos</span><strong id="stat-abierto">—</strong>
+      </div>
+      <div class="stat-chip s-prog">
+        <span>En Progreso</span><strong id="stat-progreso">—</strong>
+      </div>
+      <div class="stat-chip s-res">
+        <span>Resueltos</span><strong id="stat-resuelto">—</strong>
+      </div>
+      <div class="stat-chip s-closed">
+        <span>Cerrados</span><strong id="stat-cerrado">—</strong>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <h2>Tickets</h2>
+      <span class="ticket-count" id="ticket-count">0</span>
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" id="searchInput" placeholder="Buscar folio, nombre, descripción..." oninput="filterTickets()">
+      </div>
+      <div class="toolbar-filters">
+        <button class="filter-btn active" onclick="setFilter('all',this)">Todos</button>
+        <button class="filter-btn f-abierto"  onclick="setFilter('Abierto',this)">Abiertos</button>
+        <button class="filter-btn f-progreso" onclick="setFilter('En progreso',this)">En Progreso</button>
+        <button class="filter-btn f-resuelto" onclick="setFilter('Resuelto',this)">Resueltos</button>
+        <button class="filter-btn f-cerrado"  onclick="setFilter('Cerrado',this)">Cerrados</button>
+      </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Folio</th>
+            <th>Descripción</th>
+            <th>Solicitante</th>
+            <th>Categoría</th>
+            <th>Prioridad</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody id="ticketsBody">
+          <tr><td colspan="7" class="loading">Cargando tickets...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PANEL DETALLE -->
+  <div id="panel-detail">
+    <div class="empty-state" id="detail-empty">
+      <svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      <p>Selecciona un ticket para ver el detalle</p>
+    </div>
+    <div id="detail-content" style="display:none; flex-direction:column;">
+
+      <!-- Header detalle -->
+      <div class="detail-header">
+        <div>
+          <div class="detail-folio" id="d-folio"></div>
+          <div class="detail-title" id="d-resumen"></div>
+          <div class="detail-meta"  id="d-meta"></div>
+        </div>
+        <button class="btn-close-detail" onclick="closeDetail()">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="detail-body">
+
+        <!-- Info grid -->
+        <div class="detail-section">
+          <div class="section-title">Información del Ticket</div>
+          <div class="info-grid">
+            <div class="info-item"><label>Solicitante</label><span id="d-nombre"></span></div>
+            <div class="info-item"><label>Área</label><span id="d-area"></span></div>
+            <div class="info-item"><label>Categoría</label><span id="d-categoria"></span></div>
+            <div class="info-item"><label>Subcategoría</label><span id="d-subcategoria"></span></div>
+            <div class="info-item"><label>Activo / Equipo</label><span id="d-activo"></span></div>
+            <div class="info-item"><label>Prioridad</label><span id="d-prioridad"></span></div>
+          </div>
+        </div>
+
+        <!-- Descripción -->
+        <div class="detail-section">
+          <div class="section-title">Descripción Detallada</div>
+          <div class="desc-box" id="d-descripcion">—</div>
+        </div>
+
+        <!-- Acción admin -->
+        <div class="detail-section">
+          <div class="action-box">
+            <h4>⚙️ Actualizar Ticket</h4>
+            <div>
+              <div class="section-title" style="margin-bottom:8px">Cambiar Estado</div>
+              <div class="estado-btns">
+                <button class="btn-estado" data-estado="Abierto"      onclick="selectEstado(this)">🟢 Abierto</button>
+                <button class="btn-estado" data-estado="En progreso"  onclick="selectEstado(this)">🟡 En Progreso</button>
+                <button class="btn-estado" data-estado="Resuelto"     onclick="selectEstado(this)">🔵 Resuelto</button>
+                <button class="btn-estado" data-estado="Cerrado"      onclick="selectEstado(this)">⚫ Cerrado</button>
+              </div>
+            </div>
+            <div>
+              <div class="section-title" style="margin-bottom:8px">Comentario / Solución</div>
+              <textarea class="solucion-area" id="solucionInput"
+                placeholder="Describe la solución aplicada o agrega un comentario..."></textarea>
+            </div>
+            <button class="btn-guardar" id="btn-guardar" onclick="guardarCambios()">
+              Guardar Cambios
+            </button>
+          </div>
+        </div>
+
+        <!-- Historial -->
+        <div class="detail-section">
+          <div class="section-title">Historial de Estados</div>
+          <div class="timeline" id="d-historial"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+let allTickets    = [];
+let filteredTickets = [];
+let currentFilter = 'all';
+let selectedTicket = null;
+let selectedEstado = null;
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', loadTickets);
+
+async function loadTickets() {
+  try {
+    const res  = await fetch('/tickets');
+    if (res.status === 401) { window.location.href='/login'; return; }
+    const data = await res.json();
+    allTickets = data.tickets || [];
+    updateStats();
+    applyFilter();
+  } catch(e) {
+    showToast('Error cargando tickets', 'err');
+  }
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────────
+function updateStats() {
+  document.getElementById('stat-total').textContent    = allTickets.length;
+  document.getElementById('stat-abierto').textContent  = allTickets.filter(t=>t.estado==='Abierto').length;
+  document.getElementById('stat-progreso').textContent = allTickets.filter(t=>t.estado==='En progreso').length;
+  document.getElementById('stat-resuelto').textContent = allTickets.filter(t=>t.estado==='Resuelto').length;
+  document.getElementById('stat-cerrado').textContent  = allTickets.filter(t=>t.estado==='Cerrado').length;
+}
+
+// ── FILTROS ───────────────────────────────────────────────────────────────
+function setFilter(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilter();
+}
+
+function applyFilter() {
+  let list = [...allTickets];
+  if (currentFilter !== 'all') list = list.filter(t => t.estado === currentFilter);
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  if (q) list = list.filter(t =>
+    (t.id||'').toLowerCase().includes(q) ||
+    (t.nombre||'').toLowerCase().includes(q) ||
+    (t.resumen||'').toLowerCase().includes(q) ||
+    (t.descripcion||'').toLowerCase().includes(q)
+  );
+  filteredTickets = list;
+  renderTable(list);
+}
+
+function filterTickets() { applyFilter(); }
+
+// ── RENDER TABLE ──────────────────────────────────────────────────────────
+const PRIO_LABEL = {1:'Baja',2:'Normal',3:'Media',4:'Urgente'};
+
+function renderTable(tickets) {
+  document.getElementById('ticket-count').textContent = tickets.length;
+  const tbody = document.getElementById('ticketsBody');
+  if (!tickets.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="loading" style="color:var(--muted2)">Sin tickets encontrados</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = tickets.map(t => `
+    <tr onclick="openDetail('${t.id}')" id="row-${t.id}" ${selectedTicket?.id===t.id?'class="selected"':''}>
+      <td><span class="folio-link">${t.id}</span></td>
+      <td><div class="td-desc">${escHtml(t.resumen||'')}</div></td>
+      <td><span class="td-user">${escHtml(t.nombre||'')}</span></td>
+      <td style="font-size:12px;color:var(--muted2)">${escHtml(t.categoria||'')}</td>
+      <td><span class="prio prio-${t.prioridad}"><span class="prio-dot"></span>${PRIO_LABEL[t.prioridad]||t.prioridad}</span></td>
+      <td><span class="badge-estado badge-${(t.estado||'').replace(' ','.')}">${t.estado||''}</span></td>
+      <td><span class="td-date">${t.creado_en||''}</span></td>
+    </tr>
+  `).join('');
+}
+
+// ── DETALLE ───────────────────────────────────────────────────────────────
+function openDetail(id) {
+  const ticket = allTickets.find(t => t.id === id);
+  if (!ticket) return;
+
+  selectedTicket = ticket;
+  selectedEstado = ticket.estado;
+
+  // Marcar fila seleccionada
+  document.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
+  const row = document.getElementById(`row-${id}`);
+  if (row) row.classList.add('selected');
+
+  // Split view
+  document.getElementById('panel-list').classList.add('split');
+  document.getElementById('panel-detail').classList.add('open');
+
+  // Llenar datos
+  document.getElementById('d-folio').textContent    = ticket.id;
+  document.getElementById('d-resumen').textContent  = ticket.resumen || '—';
+  document.getElementById('d-meta').textContent     = `Creado: ${ticket.creado_en || '—'}  •  Última actualización: ${ticket.actualizado_en || '—'}`;
+  document.getElementById('d-nombre').textContent      = ticket.nombre || '—';
+  document.getElementById('d-area').textContent        = ticket.area || '—';
+  document.getElementById('d-categoria').textContent   = ticket.categoria || '—';
+  document.getElementById('d-subcategoria').textContent= ticket.subcategoria || '—';
+  document.getElementById('d-activo').textContent      = ticket.activo || '—';
+  document.getElementById('d-prioridad').innerHTML     = `<span class="prio prio-${ticket.prioridad}"><span class="prio-dot"></span>${PRIO_LABEL[ticket.prioridad]||ticket.prioridad}</span>`;
+  document.getElementById('d-descripcion').textContent = ticket.descripcion || 'Sin descripción adicional.';
+
+  // Estado botones
+  document.querySelectorAll('.btn-estado').forEach(btn => {
+    const es = btn.dataset.estado;
+    btn.className = 'btn-estado' + (es === ticket.estado ? ` sel-${es.replace(' ','_')}` : '');
+  });
+
+  // Historial
+  renderHistorial(ticket.historial_estados || []);
+
+  // Limpiar solución
+  document.getElementById('solucionInput').value = '';
+
+  // Mostrar contenido
+  document.getElementById('detail-empty').style.display   = 'none';
+  document.getElementById('detail-content').style.display = 'flex';
+}
+
+function renderHistorial(historial) {
+  const el = document.getElementById('d-historial');
+  if (!historial.length) { el.innerHTML = '<p style="color:var(--muted2);font-size:13px">Sin historial</p>'; return; }
+  el.innerHTML = [...historial].reverse().map(h => `
+    <div class="tl-item">
+      <div>
+        <div class="tl-estado"><span class="badge-estado badge-${(h.estado||'').replace(' ','.')}">${h.estado}</span></div>
+        <div class="tl-nota">${escHtml(h.nota||'')}</div>
+        <div class="tl-fecha">${h.fecha||''}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function closeDetail() {
+  document.getElementById('panel-list').classList.remove('split');
+  document.getElementById('panel-detail').classList.remove('open');
+  document.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
+  selectedTicket = null;
+}
+
+function selectEstado(btn) {
+  selectedEstado = btn.dataset.estado;
+  document.querySelectorAll('.btn-estado').forEach(b => {
+    const es = b.dataset.estado;
+    b.className = 'btn-estado' + (es === selectedEstado ? ` sel-${es.replace(' ','_')}` : '');
+  });
+}
+
+// ── GUARDAR ───────────────────────────────────────────────────────────────
+async function guardarCambios() {
+  if (!selectedTicket || !selectedEstado) return;
+  const nota = document.getElementById('solucionInput').value.trim();
+  const btn  = document.getElementById('btn-guardar');
+
+  btn.disabled = true; btn.textContent = 'Guardando...';
+
+  try {
+    const res = await fetch(`/tickets/${selectedTicket.id}/estado`, {
+      method:'PATCH',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ estado: selectedEstado, nota: nota || `Estado cambiado a: ${selectedEstado}` })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      // Actualizar local
+      const idx = allTickets.findIndex(t => t.id === selectedTicket.id);
+      if (idx !== -1) {
+        allTickets[idx].estado         = selectedEstado;
+        allTickets[idx].actualizado_en = new Date().toLocaleDateString('es-MX');
+        if (!allTickets[idx].historial_estados) allTickets[idx].historial_estados = [];
+        allTickets[idx].historial_estados.push({
+          estado: selectedEstado,
+          nota: nota || `Estado cambiado a: ${selectedEstado}`,
+          fecha: new Date().toLocaleString('es-MX')
+        });
+        selectedTicket = allTickets[idx];
+      }
+      updateStats();
+      applyFilter();
+      openDetail(selectedTicket.id);
+      showToast('✅ Ticket actualizado correctamente', 'ok');
+    } else {
+      showToast(data.error || 'Error al actualizar', 'err');
+    }
+  } catch(e) {
+    showToast('Error de conexión', 'err');
+  }
+  btn.disabled = false; btn.textContent = 'Guardar Cambios';
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function showToast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className   = `show ${type}`;
+  setTimeout(() => { t.className = type; }, 3000);
+}
+
+async function doLogout() {
+  await fetch('/auth/logout', { method:'POST' });
+  window.location.href = '/login';
+}
+</script>
+</body>
+</html>

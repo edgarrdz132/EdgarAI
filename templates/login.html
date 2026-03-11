@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>EdgarAI — Acceso</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #080b10;
+  --surface: #0f1218;
+  --surface2:#161b24;
+  --border:  rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --accent:  #00e5ff;
+  --accent2: #7c6ff7;
+  --text:    #e8eaf0;
+  --muted:   #4a5568;
+  --muted2:  #718096;
+  --fh: 'Syne', sans-serif;
+  --fb: 'DM Sans', sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body { height:100%; font-family:var(--fb); background:var(--bg); color:var(--text); }
+
+body {
+  display:flex; align-items:center; justify-content:center;
+  min-height:100vh; padding:20px;
+  background: radial-gradient(ellipse at 20% 50%, rgba(0,229,255,0.04) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 20%, rgba(124,111,247,0.05) 0%, transparent 60%),
+              var(--bg);
+}
+
+.login-card {
+  width:100%; max-width:400px;
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:24px;
+  padding:40px 36px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+  animation: fadeUp 0.4s ease;
+}
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(20px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+.logo {
+  display:flex; align-items:center; gap:14px;
+  margin-bottom:32px;
+}
+.logo img {
+  width:52px; height:52px; border-radius:14px;
+  border:2px solid rgba(0,229,255,0.2);
+  object-fit:cover;
+}
+.logo-text h1 { font-family:var(--fh); font-size:20px; font-weight:700; color:#fff; }
+.logo-text span { font-size:11px; color:var(--muted2); text-transform:uppercase; letter-spacing:0.1em; }
+
+/* Tabs */
+.tabs { display:flex; gap:4px; background:var(--surface2); border-radius:12px; padding:4px; margin-bottom:28px; }
+.tab {
+  flex:1; padding:9px; border-radius:9px; border:none;
+  font-family:var(--fb); font-size:13px; font-weight:600;
+  cursor:pointer; transition:all 0.2s; color:var(--muted2); background:transparent;
+}
+.tab.active { background:var(--surface); color:var(--text); box-shadow:0 2px 8px rgba(0,0,0,0.3); }
+
+/* Form */
+.form-group { margin-bottom:16px; }
+.form-group label {
+  display:block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:0.08em; color:var(--muted2); margin-bottom:6px;
+}
+.form-group input, .form-group select {
+  width:100%; padding:12px 14px;
+  background:var(--surface2); border:1px solid var(--border2);
+  border-radius:10px; color:var(--text); font-family:var(--fb); font-size:14px;
+  outline:none; transition:border-color 0.2s;
+}
+.form-group input:focus, .form-group select:focus {
+  border-color:rgba(0,229,255,0.4);
+  box-shadow:0 0 0 3px rgba(0,229,255,0.06);
+}
+.form-group select option { background:var(--surface2); }
+
+.btn-primary {
+  width:100%; padding:13px;
+  background:linear-gradient(135deg, var(--accent), var(--accent2));
+  border:none; border-radius:12px;
+  font-family:var(--fh); font-size:14px; font-weight:700;
+  color:#000; cursor:pointer; margin-top:8px;
+  transition:all 0.2s; letter-spacing:0.03em;
+}
+.btn-primary:hover { opacity:0.9; transform:translateY(-1px); }
+.btn-primary:active { transform:translateY(0); }
+.btn-primary:disabled { opacity:0.5; cursor:default; transform:none; }
+
+.error-msg {
+  background:rgba(255,77,106,0.1); border:1px solid rgba(255,77,106,0.25);
+  border-radius:10px; padding:10px 14px;
+  font-size:13px; color:#ff7a90; margin-bottom:16px;
+  display:none;
+}
+.error-msg.show { display:block; }
+
+.success-msg {
+  background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.25);
+  border-radius:10px; padding:10px 14px;
+  font-size:13px; color:#4ade80; margin-bottom:16px;
+  display:none;
+}
+.success-msg.show { display:block; }
+
+.divider { text-align:center; color:var(--muted); font-size:11px; margin:4px 0 8px; }
+
+/* Panel oculto */
+.panel { display:none; }
+.panel.active { display:block; }
+</style>
+</head>
+<body>
+
+<div class="login-card">
+  <div class="logo">
+    <img src="/static/edgarai_avatar.jpg" alt="EdgarAI">
+    <div class="logo-text">
+      <h1>EdgarAI</h1>
+      <span>Soporte IT Inteligente</span>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('login')">Iniciar Sesión</button>
+    <button class="tab" onclick="switchTab('register')">Crear Cuenta</button>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="panel-login" class="panel active">
+    <div class="error-msg" id="login-error"></div>
+    <div class="form-group">
+      <label>Usuario</label>
+      <input type="text" id="login-user" placeholder="tu_usuario" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label>Contraseña</label>
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" id="btn-login" onclick="doLogin()">Entrar →</button>
+    <div class="divider" style="margin-top:16px">Usuario admin por defecto: admin / admin123</div>
+  </div>
+
+  <!-- REGISTRO -->
+  <div id="panel-register" class="panel">
+    <div class="error-msg"    id="reg-error"></div>
+    <div class="success-msg"  id="reg-success"></div>
+    <div class="form-group">
+      <label>Nombre completo</label>
+      <input type="text" id="reg-nombre" placeholder="Juan Pérez">
+    </div>
+    <div class="form-group">
+      <label>Usuario</label>
+      <input type="text" id="reg-user" placeholder="juan.perez">
+    </div>
+    <div class="form-group">
+      <label>Contraseña</label>
+      <input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres">
+    </div>
+    
+    <button class="btn-primary" id="btn-register" onclick="doRegister()">Crear Cuenta</button>
+  </div>
+</div>
+
+<script>
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', (tab==='login' && i===0) || (tab==='register' && i===1));
+  });
+  document.getElementById('panel-login').classList.toggle('active', tab==='login');
+  document.getElementById('panel-register').classList.toggle('active', tab==='register');
+}
+
+// Enter para submit
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const loginActive = document.getElementById('panel-login').classList.contains('active');
+    if (loginActive) doLogin(); else doRegister();
+  }
+});
+
+async function doLogin() {
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value.trim();
+  const err  = document.getElementById('login-error');
+  const btn  = document.getElementById('btn-login');
+
+  err.classList.remove('show');
+  if (!user || !pass) { err.textContent='Completa todos los campos'; err.classList.add('show'); return; }
+
+  btn.disabled = true; btn.textContent = 'Entrando...';
+
+  try {
+    const res  = await fetch('/auth/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({username:user, password:pass})
+    });
+    const data = await res.json();
+    if (res.ok) {
+      window.location.href = '/';
+    } else {
+      err.textContent = data.error || 'Error al iniciar sesión';
+      err.classList.add('show');
+      btn.disabled = false; btn.textContent = 'Entrar →';
+    }
+  } catch(e) {
+    err.textContent = 'Error de conexión';
+    err.classList.add('show');
+    btn.disabled = false; btn.textContent = 'Entrar →';
+  }
+}
+
+async function doRegister() {
+  const nombre = document.getElementById('reg-nombre').value.trim();
+  const user   = document.getElementById('reg-user').value.trim();
+  const pass   = document.getElementById('reg-pass').value.trim();
+  const rol    = 'operador';
+  const err    = document.getElementById('reg-error');
+  const ok     = document.getElementById('reg-success');
+  const btn    = document.getElementById('btn-register');
+
+  err.classList.remove('show'); ok.classList.remove('show');
+  if (!nombre || !user || !pass) { err.textContent='Completa todos los campos'; err.classList.add('show'); return; }
+
+  btn.disabled = true; btn.textContent = 'Creando...';
+
+  try {
+    const res  = await fetch('/auth/register', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({nombre, username:user, password:pass, rol})
+    });
+    const data = await res.json();
+    if (res.ok) {
+      ok.textContent = '✅ Cuenta creada. Ahora inicia sesión.';
+      ok.classList.add('show');
+      setTimeout(() => switchTab('login'), 1500);
+    } else {
+      err.textContent = data.error || 'Error al crear cuenta';
+      err.classList.add('show');
+    }
+  } catch(e) {
+    err.textContent = 'Error de conexión';
+    err.classList.add('show');
+  }
+  btn.disabled = false; btn.textContent = 'Crear Cuenta';
+}
+</script>
+</body>
+</html>
