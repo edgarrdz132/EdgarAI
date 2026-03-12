@@ -493,6 +493,7 @@ def create_ticket():
     }
 
     conn = get_conn()
+    print(f"DEBUG conn: {conn}, DATABASE_URL: {DATABASE_URL[:30] if DATABASE_URL else 'NONE'}")
     if conn:
         try:
             with conn.cursor() as cur:
