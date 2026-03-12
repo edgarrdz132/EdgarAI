@@ -670,9 +670,11 @@ def _demo_response(message):
 # ═════════════════════════════════════════════════════════════════════════════
 # MAIN
 # ═════════════════════════════════════════════════════════════════════════════
+init_db()  # <- agrega esta línea aquí
+
 if __name__ == '__main__':
     init_db()
-    port  = int(os.getenv('PORT', 5000))
+    port = int(os.getenv('PORT', 5000))
     debug = os.getenv('DEBUG','true').lower() == 'true'
     print(f"""
 ╔══════════════════════════════════════════════╗
