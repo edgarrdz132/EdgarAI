@@ -36,7 +36,7 @@ except ImportError:
     PSYCOPG2_AVAILABLE = False
     print("⚠️  psycopg2 no instalado. Ejecuta: pip install psycopg2-binary")
 
-DATABASE_URL   = os.getenv("DATABASE_URL", "")
+DATABASE_URL   = os.getenv("DATABASE_URL", "").replace("subabase.com", "supabase.com")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_MODEL   = os.getenv("OPENAI_MODEL", "gpt-4o")
 
